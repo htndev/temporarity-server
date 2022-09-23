@@ -10,6 +10,7 @@ import { CredentialsSignUpDto } from './dto/signup.dto';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
   @Post('/credentials/signup')
   async credentialsSignUp(@Body() body: CredentialsSignUpDto) {
     return this.authService.credentialsSignUp(body);
@@ -31,7 +32,7 @@ export class AuthController {
   @Get('/google/callback')
   @UseGuards(AuthGuard(AuthScope.Google))
   async googleCallback(@Req() { user }: Request, @Res() response: Response) {
-    return this.authService.oauthSignup(user as OAuthProviderData, response);
+    return this.authService.oauth(user as OAuthProviderData, response);
   }
 
   @Get('/facebook')
@@ -45,7 +46,7 @@ export class AuthController {
   @Get('/facebook/callback')
   @UseGuards(AuthGuard(AuthScope.Facebook))
   async facebookCallback(@Req() { user }: Request, @Res() response: Response) {
-    return this.authService.oauthSignup(user as OAuthProviderData, response);
+    return this.authService.oauth(user as OAuthProviderData, response);
   }
 
   @Get('/github')
@@ -59,6 +60,6 @@ export class AuthController {
   @Get('/github/callback')
   @UseGuards(AuthGuard(AuthScope.Github))
   async githubCallback(@Req() { user }: Request, @Res() response: Response) {
-    return this.authService.oauthSignup(user as OAuthProviderData, response);
+    return this.authService.oauth(user as OAuthProviderData, response);
   }
 }

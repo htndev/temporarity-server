@@ -29,7 +29,7 @@ export class FacebookStrategy extends PassportStrategy(Strategy, AuthScope.Faceb
   async validate(
     accessToken: string,
     refreshToken: string,
-    { id, emails: [{ value: email }] }: Profile,
+    { id, displayName: fullName, emails: [{ value: email }] }: Profile,
     done: (err: any, user: any, info?: any) => void
   ): Promise<void> {
     const profilePicture = await this.getProfileImage({ id, accessToken });
@@ -38,6 +38,7 @@ export class FacebookStrategy extends PassportStrategy(Strategy, AuthScope.Faceb
       id,
       provider: AuthScope.Facebook,
       email,
+      fullName,
       profilePicture
     };
 

@@ -56,6 +56,6 @@ export class AppConfig extends BaseConfig<AppConfigProperties> {
   get url(): string {
     const port = this.isLocalhost ? `:${this.port}` : '';
 
-    return `http${this.isLocalhost ? '' : 's'}://${this.appHostname}${port}`;
+    return `http${this.isLocalhost ? '' : 's'}://${this.appHostname}${port}/${this.apiVersion}`;
   }
 }

@@ -11,6 +11,12 @@ interface SecurityConfigProperties {
   GOOGLE_APP_SECRET: string;
   GITHUB_APP_ID: string;
   GITHUB_APP_SECRET: string;
+  JWT_SUBJECT: string;
+  COOKIE_SECRET: string;
+  JWT_ACCESS_TOKEN_SECRET: string;
+  JWT_REFRESH_TOKEN_SECRET: string;
+  JWT_ACCESS_TOKEN_EXPIRES_IN: number;
+  JWT_REFRESH_TOKEN_EXPIRES_IN: number;
 }
 
 type AuthProps = { [k in AuthScope]: string | number };
@@ -24,7 +30,13 @@ export class SecurityConfig extends BaseConfig<SecurityConfigProperties> {
       GOOGLE_APP_ID: Joi.string().required(),
       GOOGLE_APP_SECRET: Joi.string().required(),
       GITHUB_APP_ID: Joi.string().required(),
-      GITHUB_APP_SECRET: Joi.string().required()
+      GITHUB_APP_SECRET: Joi.string().required(),
+      JWT_SUBJECT: Joi.string().required(),
+      COOKIE_SECRET: Joi.string().required(),
+      JWT_ACCESS_TOKEN_SECRET: Joi.string().required(),
+      JWT_REFRESH_TOKEN_SECRET: Joi.string().required(),
+      JWT_ACCESS_TOKEN_EXPIRES_IN: Joi.number().required(),
+      JWT_REFRESH_TOKEN_EXPIRES_IN: Joi.number().required()
     });
   }
 
@@ -42,5 +54,25 @@ export class SecurityConfig extends BaseConfig<SecurityConfigProperties> {
       [AuthScope.Google]: this.config.GOOGLE_APP_SECRET,
       [AuthScope.Github]: this.config.GITHUB_APP_SECRET
     };
+  }
+
+  get jwtAccessTokenSecret(): string {
+    return this.config.JWT_ACCESS_TOKEN_SECRET;
+  }
+
+  get jwtRefreshTokenSecret(): string {
+    return this.config.JWT_REFRESH_TOKEN_SECRET;
+  }
+
+  get cookieSecret(): string {
+    return this.config.COOKIE_SECRET;
+  }
+
+  get jwtAccessTokenExpiresIn(): string {
+    return `${this.config.JWT_ACCESS_TOKEN_EXPIRES_IN}s`;
+  }
+
+  get jwtRefreshTokenExpiresIn(): string {
+    return `${this.config.JWT_REFRESH_TOKEN_EXPIRES_IN}s`;
   }
 }

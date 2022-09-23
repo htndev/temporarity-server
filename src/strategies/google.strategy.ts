@@ -10,7 +10,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, AuthScope.Google)
   constructor(
     @Inject(SecurityConfig)
     { appId: { [AuthScope.Google]: clientID }, secret: { [AuthScope.Google]: clientSecret } }: SecurityConfig,
-    @Inject(AppConfig) { url }: AppConfig,
+    @Inject(AppConfig) { url }: AppConfig
   ) {
     super({
       clientID,
@@ -23,13 +23,14 @@ export class GoogleStrategy extends PassportStrategy(Strategy, AuthScope.Google)
   validate(
     accessToken: string,
     refreshToken: string,
-    { id, emails: [{ value: email }], photos: [{ value: profilePicture }] }: Profile,
+    { id, displayName: fullName, emails: [{ value: email }], photos: [{ value: profilePicture }] }: Profile,
     done: VerifyCallback
   ): void {
     const payload: OAuthProviderData = {
       id,
       provider: AuthScope.Google,
       email,
+      fullName,
       profilePicture
     };
 

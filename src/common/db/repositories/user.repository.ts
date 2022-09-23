@@ -12,14 +12,16 @@ export class UserRepository extends BaseRepository<User> {
     email,
     profilePicture,
     provider,
-    providerId
+    providerId,
+    fullName
   }: {
     email: string;
     profilePicture: string;
     provider: AuthScope;
     providerId: string | number;
+    fullName: string;
   }) {
-    const user = this.create({ email, profilePicture, isOauthUser: true });
+    const user = this.create({ email, fullName, profilePicture, isOauthUser: true });
     await user.save();
 
     const identityProvider = new IdentityProvider();

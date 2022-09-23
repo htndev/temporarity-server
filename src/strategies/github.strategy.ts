@@ -22,7 +22,12 @@ export class GithubStrategy extends PassportStrategy(Strategy, AuthScope.Github)
   validate(
     accessToken: string,
     refreshToken: string,
-    { id, photos: [{ value: profilePicture }], emails: [{ value: email }] = [{ value: null }] }: Profile,
+    {
+      id,
+      displayName: fullName,
+      photos: [{ value: profilePicture }],
+      emails: [{ value: email }] = [{ value: null }]
+    }: Profile,
     // profile: Profile,
     done: (err: any, user: any, info?: any) => void
   ): void {
@@ -30,6 +35,7 @@ export class GithubStrategy extends PassportStrategy(Strategy, AuthScope.Github)
       id,
       email,
       profilePicture,
+      fullName,
       provider: AuthScope.Github
     };
 

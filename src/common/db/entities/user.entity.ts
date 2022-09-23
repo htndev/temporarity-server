@@ -9,6 +9,9 @@ export class User extends BaseEntity {
   @ObjectIdColumn()
   id: ObjectID;
 
+  @Column({ type: 'string' })
+  fullName: string;
+
   @Column({ unique: true })
   email: string;
 

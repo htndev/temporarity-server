@@ -5,7 +5,7 @@ export class BaseRepository<T> extends Repository<T> {
     try {
       await this.findOneOrFail(entity as FindOneOptions<T>);
       return true;
-    } catch(e) {
+    } catch (e) {
       return false;
     }
   }

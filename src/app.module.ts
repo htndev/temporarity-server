@@ -1,11 +1,13 @@
-import { DatabaseConfig } from './common/providers/config/database.config';
-import { NodeEnvironment } from './common/constants/environment.constant';
-import { Module, ValidationPipe } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, ValidationPipe } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { ConfigModule as LocalConfigModule } from './common/providers/config/config.module';
+import { APP_PIPE } from '@nestjs/core';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
-import { APP_PIPE } from '@nestjs/core';
+import { CommonModule } from './common/common.module';
+import { NodeEnvironment } from './common/constants/environment.constant';
+import { ConfigModule as LocalConfigModule } from './common/providers/config/config.module';
+import { DatabaseConfig } from './common/providers/config/database.config';
+import { RequestLoggerMiddleware } from './middleware/logger.middleware';
 
 @Module({
   imports: [
@@ -35,8 +37,13 @@ import { APP_PIPE } from '@nestjs/core';
           useUnifiedTopology: true
         } as TypeOrmModuleOptions)
     }),
-    AuthModule
+    AuthModule,
+    CommonModule
   ],
   providers: [{ provide: APP_PIPE, useValue: new ValidationPipe() }]
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(RequestLoggerMiddleware).forRoutes('*');
+  }
+}
