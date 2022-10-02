@@ -1,3 +1,4 @@
+import { JwtAccessTokenStrategy } from './../strategies/jwt-access.strategy';
 import { HttpModule, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserRepository } from '../common/db/repositories/user.repository';
@@ -19,7 +20,7 @@ import { AuthService } from './auth.service';
     CommonModule,
     TokenModule
   ],
-  providers: [AuthService, FacebookStrategy, GoogleStrategy, GithubStrategy],
+  providers: [AuthService, FacebookStrategy, GoogleStrategy, GithubStrategy, JwtAccessTokenStrategy],
   controllers: [AuthController]
 })
 export class AuthModule {}

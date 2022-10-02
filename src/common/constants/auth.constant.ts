@@ -5,3 +5,8 @@ export enum AuthScope {
 }
 
 export const CALLBACK_PATH = 'callback';
+
+export enum JwtStrategy {
+  Access = 'jwt-at',
+  Refresh = 'jwt-rt'
+}

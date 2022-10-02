@@ -1,3 +1,4 @@
+import { SecurityConfig } from './common/providers/config/security.config';
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -8,18 +9,19 @@ import * as compression from 'compression';
 import helmet from 'helmet';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, { bodyParser: true });
-  const config = app.get(AppConfig);
-  app.setGlobalPrefix(config.apiVersion);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const appConfig = app.get(AppConfig);
+  const securityConfig = app.get(SecurityConfig);
 
-  app.enableCors({ allowedHeaders: config.allowedHeaders, origin: config.allowedDomains, credentials: true });
-  app.use(cookieParser());
+  app.setGlobalPrefix(appConfig.apiVersion);
+  app.enableCors({ allowedHeaders: appConfig.allowedHeaders, origin: appConfig.allowedDomains, credentials: true });
+  app.use(cookieParser(securityConfig.cookieSecret));
   app.use(helmet());
   app.use(compression());
   app.disable('x-powered-by');
 
-  await app.listen(config.port);
-  Logger.verbose(`Server launched: ${config.url}`);
+  await app.listen(appConfig.port);
+  Logger.verbose(`Server launched: ${appConfig.url}`);
 }
 
 bootstrap();

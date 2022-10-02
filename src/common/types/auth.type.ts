@@ -1,3 +1,4 @@
+import { User } from '../db/entities/user.entity';
 import { AuthScope } from './../constants/auth.constant';
 
 export interface OAuthProviderData {
@@ -7,3 +8,5 @@ export interface OAuthProviderData {
   fullName: string;
   id: string;
 }
+
+export type SafeUser = Pick<User, 'id' | 'email' | 'fullName' | 'profilePicture'>;

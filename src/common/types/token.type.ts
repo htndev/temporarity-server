@@ -3,7 +3,7 @@ export interface JwtPayload {
   fullName: string;
 }
 
-export enum TokenType {
+export enum Token {
   Refresh = 'refresh',
   Access = 'access'
 }

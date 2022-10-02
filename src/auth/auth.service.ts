@@ -1,30 +1,47 @@
-import { TokenType } from './../common/types/token.type';
-import { BadRequestException, ConflictException, HttpStatus, Injectable } from '@nestjs/common';
+import { BadRequestException, ConflictException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'express';
 import { UserRepository } from '../common/db/repositories/user.repository';
 import { AppConfig } from '../common/providers/config';
 import { OAuthProviderData } from '../common/types/auth.type';
+import { MILLISECOND } from './../common/constants/time.constant';
 import { IdentityProviderRepository } from './../common/db/repositories/identity-provider.repository';
+import { SecurityConfig } from './../common/providers/config/security.config';
 import { TokenService } from './../common/providers/token/token.service';
+import { CookiesType } from './../common/types/base.type';
 import { HttpResponse } from './../common/types/response.type';
+import { Token } from './../common/types/token.type';
 import { redirect } from './../common/utils/redirect.util';
 import { CredentialsSignInDto } from './dto/signin.dto';
 import { CredentialsSignUpDto } from './dto/signup.dto';
 
-type TokenResponse = HttpResponse<{ tokens: { [k in TokenType]: string } }>;
+type TokensObject = { [k in Token]: string };
+type TokenType = { tokens: TokensObject };
+type TokenResponse = HttpResponse<TokenType>;
 
 @Injectable()
 export class AuthService {
+  private readonly tokenCookiePrefix = 'token.';
   constructor(
     private readonly appConfig: AppConfig,
+    private readonly securityConfig: SecurityConfig,
     @InjectRepository(UserRepository) private readonly userRepository: UserRepository,
     @InjectRepository(IdentityProviderRepository)
     private readonly identityProviderRepository: IdentityProviderRepository,
     private readonly tokenService: TokenService
   ) {}
 
-  async credentialsSignUp({ email, password, fullName }: CredentialsSignUpDto): Promise<TokenResponse> {
+  get tokenExpire(): { [token in Token]: Date } {
+    return {
+      [Token.Access]: new Date(Date.now() + this.securityConfig.jwtAccessTokenExpiresIn * MILLISECOND),
+      [Token.Refresh]: new Date(Date.now() + this.securityConfig.jwtRefreshTokenExpiresIn * MILLISECOND)
+    };
+  }
+
+  async credentialsSignUp(
+    { email, password, fullName }: CredentialsSignUpDto,
+    response: Response
+  ): Promise<TokenResponse> {
     if (await this.userRepository.isExists({ email })) {
       throw new ConflictException(`Use with email '${email}' is already exist.`);
     }
@@ -33,13 +50,15 @@ export class AuthService {
 
     const tokens = await this.tokenService.generateTokens({ email, fullName });
 
+    this.setTokens(tokens, response);
+
     return {
       status: HttpStatus.CREATED,
       tokens
     };
   }
 
-  async credentialsSignIn({ email, password }: CredentialsSignInDto): Promise<TokenResponse> {
+  async credentialsSignIn({ email, password }: CredentialsSignInDto, response: Response): Promise<TokenResponse> {
     const user = await this.userRepository.findOne({ email });
 
     if (!user) {
@@ -55,6 +74,8 @@ export class AuthService {
     }
 
     const tokens = await this.tokenService.generateTokens({ email, fullName: user.fullName });
+
+    this.setTokens(tokens, response);
 
     return {
       status: HttpStatus.CREATED,
@@ -94,7 +115,42 @@ export class AuthService {
 
     const tokens = await this.tokenService.generateTokens({ email: user.email, fullName: user.fullName });
 
-    return this.redirect(response, `/?${new URLSearchParams(tokens).toString()}`);
+    this.setTokens(tokens, response);
+
+    return this.redirect(response, `/dashboard?${new URLSearchParams(tokens).toString()}`);
+  }
+
+  async getTokens(cookies: CookiesType, response: Response): Promise<TokenResponse> {
+    console.log(cookies);
+    const rawTokens = this.getTokensFromCookies(cookies);
+    const hasRefreshToken = !!rawTokens.refresh;
+
+    if (!hasRefreshToken) {
+      throw new UnauthorizedException();
+    }
+
+    const tokens =
+      Object.values(rawTokens).filter(Boolean).length === 2
+        ? rawTokens
+        : await this.tokenService.generateTokensByRefreshToken(rawTokens.refresh);
+
+    this.setTokens(tokens, response);
+
+    return {
+      status: HttpStatus.OK,
+      tokens
+    };
+  }
+
+  async newTokens(payload: { email: string; fullName: string }, response: Response): Promise<TokenResponse> {
+    const tokens = await this.tokenService.generateTokens(payload);
+
+    this.setTokens(tokens, response);
+
+    return {
+      status: HttpStatus.OK,
+      tokens
+    };
   }
 
   private throwWrongEmailOrPassword() {
@@ -107,5 +163,25 @@ export class AuthService {
 
   private redirectToSignUpPageWithMessage(response: Response, message: string): unknown {
     return this.redirect(response, `/signup?errorMessage=${message}`);
+  }
+
+  private setTokens(tokens: TokensObject, response: Response) {
+    Object.entries(tokens).forEach(([key, value]) =>
+      response.cookie(`${this.tokenCookiePrefix}${key}`, value, {
+        httpOnly: true,
+        expires: this.tokenExpire[key],
+        signed: true,
+        sameSite: 'none',
+        secure: true,
+        domain: this.appConfig.appHostname
+      })
+    );
+  }
+
+  private getTokensFromCookies(cookies: CookiesType): TokensObject {
+    return {
+      [Token.Access]: cookies[`${this.tokenCookiePrefix}${Token.Access}`] as string,
+      [Token.Refresh]: cookies[`${this.tokenCookiePrefix}${Token.Refresh}`] as string
+    };
   }
 }

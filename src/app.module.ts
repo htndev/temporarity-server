@@ -8,6 +8,7 @@ import { NodeEnvironment } from './common/constants/environment.constant';
 import { ConfigModule as LocalConfigModule } from './common/providers/config/config.module';
 import { DatabaseConfig } from './common/providers/config/database.config';
 import { RequestLoggerMiddleware } from './middleware/logger.middleware';
+import { WorkspacesModule } from './workspaces/workspaces.module';
 
 @Module({
   imports: [
@@ -38,7 +39,8 @@ import { RequestLoggerMiddleware } from './middleware/logger.middleware';
         } as TypeOrmModuleOptions)
     }),
     AuthModule,
-    CommonModule
+    CommonModule,
+    WorkspacesModule
   ],
   providers: [{ provide: APP_PIPE, useValue: new ValidationPipe() }]
 })

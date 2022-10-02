@@ -1,3 +1,5 @@
+import { Nullable } from './../../types/base.type';
+import { SafeUser } from './../../types/auth.type';
 import { Injectable } from '@nestjs/common';
 import { EntityRepository } from 'typeorm';
 import { AuthScope } from './../../constants/auth.constant';
@@ -31,5 +33,20 @@ export class UserRepository extends BaseRepository<User> {
     await identityProvider.save();
 
     return user;
+  }
+
+  async safeFindUser({ email }: { email: string }): Promise<Nullable<SafeUser>> {
+    const user = await this.findOne({ email });
+
+    if (!user) {
+      return null;
+    }
+
+    return {
+      fullName: user.fullName,
+      email: user.email,
+      id: user.id,
+      profilePicture: user.profilePicture
+    };
   }
 }

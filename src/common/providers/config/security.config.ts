@@ -68,11 +68,11 @@ export class SecurityConfig extends BaseConfig<SecurityConfigProperties> {
     return this.config.COOKIE_SECRET;
   }
 
-  get jwtAccessTokenExpiresIn(): string {
-    return `${this.config.JWT_ACCESS_TOKEN_EXPIRES_IN}s`;
+  get jwtAccessTokenExpiresIn(): number {
+    return this.config.JWT_ACCESS_TOKEN_EXPIRES_IN;
   }
 
-  get jwtRefreshTokenExpiresIn(): string {
-    return `${this.config.JWT_REFRESH_TOKEN_EXPIRES_IN}s`;
+  get jwtRefreshTokenExpiresIn(): number {
+    return this.config.JWT_REFRESH_TOKEN_EXPIRES_IN;
   }
 }
