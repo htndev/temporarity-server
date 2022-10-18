@@ -89,7 +89,7 @@ export class AuthService {
   ): Promise<HttpResponse | unknown> {
     if (!email) {
       // No email provided
-      return this.redirect(response, '/signin?message=Failed to authorize');
+      return this.redirect(response, '/signin?errorMessage=Failed to authorize');
     }
     const isUserWithEmailExist = await this.userRepository.isExists({ email });
     const isSignedUpByIdentityProvider = await this.identityProviderRepository.isExists({ providerId: id });
@@ -121,7 +121,6 @@ export class AuthService {
   }
 
   async getTokens(cookies: CookiesType, response: Response): Promise<TokenResponse> {
-    console.log(cookies);
     const rawTokens = this.getTokensFromCookies(cookies);
     const hasRefreshToken = !!rawTokens.refresh;
 

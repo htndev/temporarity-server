@@ -1,12 +1,12 @@
-import { SecurityConfig } from './common/providers/config/security.config';
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import * as compression from 'compression';
+import * as cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { AppConfig } from './common/providers/config/app.config';
-import * as cookieParser from 'cookie-parser';
-import * as compression from 'compression';
-import helmet from 'helmet';
+import { SecurityConfig } from './common/providers/config/security.config';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);

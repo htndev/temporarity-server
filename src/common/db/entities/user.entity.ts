@@ -1,18 +1,16 @@
 import { compare, hash } from 'bcrypt';
-import { BeforeInsert, Column, Entity, ObjectID, ObjectIdColumn } from 'typeorm';
+import { BeforeInsert, Column, Entity, Index } from 'typeorm';
 import { SALT_ROUNDS } from '../../constants/security.constant';
 import { Nullable } from './../../types/base.type';
 import { BaseEntity } from './base.entity';
 
-@Entity({ name: 'users', synchronize: false })
+@Entity({ name: 'users', synchronize: true })
 export class User extends BaseEntity {
-  @ObjectIdColumn()
-  id: ObjectID;
-
   @Column({ type: 'string' })
   fullName: string;
 
   @Column({ unique: true })
+  @Index()
   email: string;
 
   @Column({ nullable: true })

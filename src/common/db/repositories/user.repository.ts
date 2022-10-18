@@ -42,11 +42,21 @@ export class UserRepository extends BaseRepository<User> {
       return null;
     }
 
+    return this.mapSecureFields(user);
+  }
+
+  async safeFindUsers(ids: string[]): Promise<SafeUser[]> {
+    const users = await this.findByIds(ids);
+
+    return users.map(this.mapSecureFields);
+  }
+
+  private mapSecureFields(user: User): SafeUser {
     return {
       fullName: user.fullName,
       email: user.email,
       id: user.id,
-      profilePicture: user.profilePicture
+      profilePicture: user.profilePicture || null
     };
   }
 }
