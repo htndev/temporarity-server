@@ -16,4 +16,8 @@ export class WorkspaceRepository extends BaseRepository<Workspace> {
       description: workspace.description
     };
   }
+
+  async getWorkspaceBySlug(slug: string): Promise<Workspace> {
+    return this.findOne({ slug });
+  }
 }

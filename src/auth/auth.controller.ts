@@ -6,7 +6,6 @@ import { AuthScope } from './../common/constants/auth.constant';
 import { Cookies } from './../common/decorators/cookies.decorator';
 import { User } from './../common/decorators/user.decorator';
 import { JwtAccessTokenGuard } from './../common/guards/jwt-access-token.guard';
-import { JwtRefreshTokenGuard } from './../common/guards/jwt-refresh-token.guard';
 import { SafeUser } from './../common/types/auth.type';
 import { CookiesType } from './../common/types/base.type';
 import { AuthService } from './auth.service';

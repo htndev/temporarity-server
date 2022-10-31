@@ -9,4 +9,4 @@ export interface OAuthProviderData {
   id: string;
 }
 
-export type SafeUser = Pick<User, 'id' | 'email' | 'fullName' | 'profilePicture'>;
+export type SafeUser = Pick<User, 'email' | 'fullName' | 'profilePicture'>;

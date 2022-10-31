@@ -1,8 +1,9 @@
-import { Nullable } from './../../types/base.type';
-import { SafeUser } from './../../types/auth.type';
 import { Injectable } from '@nestjs/common';
+import { ObjectID } from 'mongodb';
 import { EntityRepository } from 'typeorm';
 import { AuthScope } from './../../constants/auth.constant';
+import { SafeUser } from './../../types/auth.type';
+import { Nullable } from './../../types/base.type';
 import { IdentityProvider } from './../entities/identity-provider.entity';
 import { User } from './../entities/user.entity';
 import { BaseRepository } from './base.repository';
@@ -45,7 +46,7 @@ export class UserRepository extends BaseRepository<User> {
     return this.mapSecureFields(user);
   }
 
-  async safeFindUsers(ids: string[]): Promise<SafeUser[]> {
+  async safeFindUsers(ids: (string | ObjectID)[]): Promise<SafeUser[]> {
     const users = await this.findByIds(ids);
 
     return users.map(this.mapSecureFields);
@@ -55,7 +56,6 @@ export class UserRepository extends BaseRepository<User> {
     return {
       fullName: user.fullName,
       email: user.email,
-      id: user.id,
       profilePicture: user.profilePicture || null
     };
   }

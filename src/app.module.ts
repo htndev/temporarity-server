@@ -9,6 +9,7 @@ import { ConfigModule as LocalConfigModule } from './common/providers/config/con
 import { DatabaseConfig } from './common/providers/config/database.config';
 import { RequestLoggerMiddleware } from './middleware/logger.middleware';
 import { WorkspacesModule } from './workspaces/workspaces.module';
+import { RoutesModule } from './routes/routes.module';
 
 @Module({
   imports: [
@@ -40,7 +41,8 @@ import { WorkspacesModule } from './workspaces/workspaces.module';
     }),
     AuthModule,
     CommonModule,
-    WorkspacesModule
+    WorkspacesModule,
+    RoutesModule
   ],
   providers: [{ provide: APP_PIPE, useValue: new ValidationPipe() }]
 })
