@@ -5,6 +5,10 @@ import { BaseRepository } from './base.repository';
 
 @EntityRepository(WorkspaceRole)
 export class WorkspaceRoleRepository extends BaseRepository<WorkspaceRole> {
+  async getRoleById(roleId: ObjectID) {
+    return this.findOne(roleId);
+  }
+
   async getEditorRoleId(): Promise<ObjectID> {
     return this.getRoleId(Role.Editor);
   }

@@ -12,6 +12,10 @@ export class WorkspaceRoute extends BaseEntity {
   @Index()
   path: string;
 
+  @Column()
+  @Index()
+  pathPattern: RegExp;
+
   @Column({ type: 'array' })
   methods: ObjectID[];
 

@@ -1,3 +1,4 @@
+import { HttpMethod } from './../../common/types/workspace-route.type';
 import { IsArray, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class CreateWorkspaceRouteDto {
@@ -6,7 +7,7 @@ export class CreateWorkspaceRouteDto {
   path: string;
 
   @IsArray()
-  httpMethods: number[];
+  httpMethods: HttpMethod[];
 
   @IsNotEmpty()
   @IsNumber()

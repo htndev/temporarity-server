@@ -1,13 +1,16 @@
+import { Body, Controller, Get, Param, Post, Res, UseGuards } from '@nestjs/common';
 import { Response } from 'express';
-import { Body, Controller, Delete, Get, Param, Patch, Post, Res, UseGuards } from '@nestjs/common';
+import { GrantWorkspaceExistence } from 'src/common/decorators/grant-workspace-existence.decorator';
+import { Role } from '../common/constants/role.constant';
 import { Public } from '../common/decorators/public.decorator';
 import { User } from '../common/decorators/user.decorator';
+import { WorkspaceRoles } from '../common/decorators/workspace-roles.decorator';
 import { JwtAccessTokenGuard } from './../common/guards/jwt-access-token.guard';
+import { WorkspaceAccessGuard } from './../common/guards/workspace-access.guard';
 import { SafeUser } from './../common/types/auth.type';
 import { CreateWorkspaceRouteDto } from './dto/create-workspace-route.dto';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { InviteUsersDto } from './dto/invite-users.dto';
-import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
 import { WorkspacesService } from './workspaces.service';
 
 @UseGuards(JwtAccessTokenGuard)
@@ -21,20 +24,23 @@ export class WorkspacesController {
   }
 
   @Post('/:slug')
-  createRoute(
-    @Param('slug') slug: string,
-    @Body() createWorkspaceRoute: CreateWorkspaceRouteDto,
-    @User() currentUser: SafeUser
-  ) {
-    return this.workspacesService.createRoute(slug, createWorkspaceRoute, currentUser);
+  @WorkspaceRoles([Role.Owner, Role.Editor])
+  @GrantWorkspaceExistence()
+  @UseGuards(WorkspaceAccessGuard)
+  createRoute(@Param('slug') slug: string, @Body() createWorkspaceRoute: CreateWorkspaceRouteDto) {
+    return this.workspacesService.createRoute(slug, createWorkspaceRoute);
   }
 
   @Post('/:slug/invite')
+  @WorkspaceRoles([Role.Owner])
+  @GrantWorkspaceExistence()
+  @UseGuards(WorkspaceAccessGuard)
   inviteUsers(@Param('slug') slug: string, @Body() inviteUsersDto: InviteUsersDto, @User() currentUser: SafeUser) {
     return this.workspacesService.inviteUsers(slug, inviteUsersDto, currentUser);
   }
 
   @Public()
+  @GrantWorkspaceExistence()
   @Get('/:slug/accept-invite/:inviteCode')
   async acceptInvite(@Param('slug') slug: string, @Param('inviteCode') inviteCode: string, @Res() response: Response) {
     return this.workspacesService.acceptInvite(slug, inviteCode, response);
@@ -51,17 +57,10 @@ export class WorkspacesController {
   }
 
   @Get(':slug')
-  getWorkspace(@Param('slug') slug: string, @User() currentUser: SafeUser) {
-    return this.workspacesService.getWorkspace(slug, currentUser);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateWorkspaceDto: UpdateWorkspaceDto) {
-    return this.workspacesService.update(+id, updateWorkspaceDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.workspacesService.remove(+id);
+  @WorkspaceRoles([Role.Owner, Role.Editor])
+  @GrantWorkspaceExistence()
+  @UseGuards(WorkspaceAccessGuard)
+  getWorkspace(@Param('slug') slug: string) {
+    return this.workspacesService.getWorkspace(slug);
   }
 }

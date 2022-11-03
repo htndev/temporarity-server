@@ -1,7 +1,7 @@
-import { redirect } from './../common/utils/redirect.util';
+import { ALLOWED_HTTP_METHODS } from './../common/constants/routes.constant';
 import { BadRequestException, ConflictException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
-import { Response } from 'express';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Response } from 'express';
 import { ObjectID } from 'mongodb';
 import { Role } from '../common/constants/role.constant';
 import { EMAIL_INVITATION_TEMPLATE } from './../common/constants/email.constant';
@@ -21,10 +21,10 @@ import { SafeUser } from './../common/types/auth.type';
 import { HttpResponse } from './../common/types/response.type';
 import { WorkspaceMember, WorkspaceWithDetails } from './../common/types/workspace.type';
 import { SafeWorkspace } from './../common/types/workspaces.type';
+import { redirect } from './../common/utils/redirect.util';
 import { CreateWorkspaceRouteDto } from './dto/create-workspace-route.dto';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { InviteUsersDto } from './dto/invite-users.dto';
-import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
 import { Workspace } from './entities/workspace.entity';
 
 @Injectable()
@@ -126,11 +126,7 @@ export class WorkspacesService {
     };
   }
 
-  async getWorkspace(slug: string, user: SafeUser): Promise<HttpResponse<{ workspace: WorkspaceWithDetails }>> {
-    if (!(await this.canAccessWorkspace(slug, user.email))) {
-      throw new NotFoundException('Workspace does not exist');
-    }
-
+  async getWorkspace(slug: string): Promise<HttpResponse<{ workspace: WorkspaceWithDetails }>> {
     const workspace = await this.workspaceRepository.getWorkspaceBySlug(slug);
 
     return {
@@ -143,16 +139,35 @@ export class WorkspacesService {
     };
   }
 
-  async createRoute(slug: string, createWorkspaceRouteDto: CreateWorkspaceRouteDto, user: SafeUser) {
-    if (!(await this.canAccessWorkspace(slug, user.email))) {
-      throw new NotFoundException('Workspace does not exist');
+  async createRoute(slug: string, createWorkspaceRouteDto: CreateWorkspaceRouteDto) {
+    if (
+      createWorkspaceRouteDto.httpMethods.length === 0 &&
+      createWorkspaceRouteDto.httpMethods.every((method) => ALLOWED_HTTP_METHODS.includes(method))
+    ) {
+      throw new BadRequestException('Invalid HTTP methods provided.');
     }
 
     const workspace = await this.workspaceRepository.getWorkspaceBySlug(slug);
 
+    if (!workspace) {
+      throw new NotFoundException('Workspace not found');
+    }
+
+    const similarRoute = await this.workspaceRouteRepository.sameRouteExists(
+      workspace.id,
+      this.buildRoutePath(createWorkspaceRouteDto.path)
+    );
+
+    if (similarRoute) {
+      throw new ConflictException(
+        `Route '${createWorkspaceRouteDto.path}' is conflicting with '${similarRoute.path}' route.`
+      );
+    }
+
     const workspaceRoute = this.workspaceRouteRepository.create({
       workspaceId: workspace.id,
-      path: createWorkspaceRouteDto.path,
+      path: this.buildRoutePath(createWorkspaceRouteDto.path),
+      pathPattern: this.buildRoutePattern(createWorkspaceRouteDto.path),
       methods: createWorkspaceRouteDto.httpMethods,
       status: createWorkspaceRouteDto.status
     });
@@ -168,15 +183,12 @@ export class WorkspacesService {
     await workspaceRouteResponse.save();
 
     return {
-      status: HttpStatus.CREATED
+      status: HttpStatus.CREATED,
+      message: 'Route created successfully'
     };
   }
 
   async inviteUsers(slug: string, inviteUsersDto: InviteUsersDto, currentUser: SafeUser): Promise<HttpResponse> {
-    if (!(await this.canAccessWorkspace(slug, currentUser.email))) {
-      throw new NotFoundException('Workspace does not exist');
-    }
-
     if (!inviteUsersDto.emails.length) {
       throw new BadRequestException('No emails provided');
     }
@@ -277,12 +289,17 @@ export class WorkspacesService {
     };
   }
 
-  update(id: number, updateWorkspaceDto: UpdateWorkspaceDto) {
-    return `This action updates a #${id} workspace`;
+  private buildRoutePath(path: string): string {
+    return path.replace(/\/$/, '').replace(/^\//, '');
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} workspace`;
+  private buildRoutePattern(route: string): RegExp {
+    return new RegExp(
+      `^${route
+        .replace(/\*{2}/g, '.*')
+        .replace(/:[^/]+/g, '[^/]+')
+        .replace(/[^/.]\*{1}/g, '[^/]+')}`
+    );
   }
 
   private async getWorkspaceMembership(slug: string): Promise<WorkspaceMember[]> {

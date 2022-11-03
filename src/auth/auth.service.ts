@@ -152,6 +152,14 @@ export class AuthService {
     };
   }
 
+  async logout(response: Response): Promise<HttpResponse> {
+    [Token.Access, Token.Refresh].forEach((token) => response.clearCookie(`${this.tokenCookiePrefix}${token}`));
+
+    return {
+      status: HttpStatus.OK
+    };
+  }
+
   private throwWrongEmailOrPassword() {
     throw new BadRequestException('Wrong email or password');
   }

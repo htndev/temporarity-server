@@ -81,4 +81,9 @@ export class AuthController {
   async tokens(@Cookies() cookies: CookiesType, @Res() response: Response) {
     return response.json(await this.authService.getTokens(cookies, response));
   }
+
+  @Post('/logout')
+  async logout(@Res() response: Response) {
+    return response.json(await this.authService.logout(response));
+  }
 }
