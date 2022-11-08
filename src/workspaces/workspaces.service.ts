@@ -1,6 +1,4 @@
-import { ALLOWED_HTTP_METHODS } from './../common/constants/routes.constant';
 import { BadRequestException, ConflictException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'express';
 import { ObjectID } from 'mongodb';
 import { Role } from '../common/constants/role.constant';
@@ -10,9 +8,6 @@ import { UserRepository } from './../common/db/repositories/user.repository';
 import { WorkspaceInvitationRepository } from './../common/db/repositories/workspace-invitation.repository';
 import { WorkspaceMembershipRepository } from './../common/db/repositories/workspace-membership.repository';
 import { WorkspaceRoleRepository } from './../common/db/repositories/workspace-role.repository';
-import { WorkspaceRouteRequestRepository } from './../common/db/repositories/workspace-route-request.repository';
-import { WorkspaceRouteResponseRepository } from './../common/db/repositories/workspace-route-response.repository';
-import { WorkspaceRouteRepository } from './../common/db/repositories/workspace-route.repository';
 import { WorkspaceRepository } from './../common/db/repositories/workspace.repository';
 import { AppConfig } from './../common/providers/config/app.config';
 import { EmailService } from './../common/providers/email/email.service';
@@ -22,29 +17,22 @@ import { HttpResponse } from './../common/types/response.type';
 import { WorkspaceMember, WorkspaceWithDetails } from './../common/types/workspace.type';
 import { SafeWorkspace } from './../common/types/workspaces.type';
 import { redirect } from './../common/utils/redirect.util';
-import { CreateWorkspaceRouteDto } from './dto/create-workspace-route.dto';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
+import { ExcludeUserFromWorkspaceDto } from './dto/exclude-user-from-workspace.dto';
 import { InviteUsersDto } from './dto/invite-users.dto';
 import { Workspace } from './entities/workspace.entity';
 
 @Injectable()
 export class WorkspacesService {
   constructor(
-    @InjectRepository(WorkspaceRepository) private readonly workspaceRepository: WorkspaceRepository,
-    @InjectRepository(WorkspaceMembershipRepository)
-    private readonly workspaceMembershipRepository: WorkspaceMembershipRepository,
-    @InjectRepository(WorkspaceRoleRepository) private readonly workspaceRoleRepository: WorkspaceRoleRepository,
-    @InjectRepository(UserRepository) private readonly userRepository: UserRepository,
-    @InjectRepository(WorkspaceRouteRepository) private readonly workspaceRouteRepository: WorkspaceRouteRepository,
-    @InjectRepository(WorkspaceRouteRequestRepository)
-    private readonly workspaceRouteRequestRepository: WorkspaceRouteRequestRepository,
-    @InjectRepository(WorkspaceRouteResponseRepository)
-    private readonly workspaceRouteResponseRepository: WorkspaceRouteResponseRepository,
-    @InjectRepository(WorkspaceInvitationRepository)
-    private readonly workspaceInvitationRepository: WorkspaceInvitationRepository,
-    private readonly securityProvider: SecurityProvider,
+    private readonly appConfig: AppConfig,
     private readonly emailService: EmailService,
-    private readonly appConfig: AppConfig
+    private readonly securityProvider: SecurityProvider,
+    private readonly userRepository: UserRepository,
+    private readonly workspaceInvitationRepository: WorkspaceInvitationRepository,
+    private readonly workspaceMembershipRepository: WorkspaceMembershipRepository,
+    private readonly workspaceRepository: WorkspaceRepository,
+    private readonly workspaceRoleRepository: WorkspaceRoleRepository
   ) {}
 
   async create({ name, slug, description }: CreateWorkspaceDto, user: SafeUser) {
@@ -139,55 +127,6 @@ export class WorkspacesService {
     };
   }
 
-  async createRoute(slug: string, createWorkspaceRouteDto: CreateWorkspaceRouteDto) {
-    if (
-      createWorkspaceRouteDto.httpMethods.length === 0 &&
-      createWorkspaceRouteDto.httpMethods.every((method) => ALLOWED_HTTP_METHODS.includes(method))
-    ) {
-      throw new BadRequestException('Invalid HTTP methods provided.');
-    }
-
-    const workspace = await this.workspaceRepository.getWorkspaceBySlug(slug);
-
-    if (!workspace) {
-      throw new NotFoundException('Workspace not found');
-    }
-
-    const similarRoute = await this.workspaceRouteRepository.sameRouteExists(
-      workspace.id,
-      this.buildRoutePath(createWorkspaceRouteDto.path)
-    );
-
-    if (similarRoute) {
-      throw new ConflictException(
-        `Route '${createWorkspaceRouteDto.path}' is conflicting with '${similarRoute.path}' route.`
-      );
-    }
-
-    const workspaceRoute = this.workspaceRouteRepository.create({
-      workspaceId: workspace.id,
-      path: this.buildRoutePath(createWorkspaceRouteDto.path),
-      pathPattern: this.buildRoutePattern(createWorkspaceRouteDto.path),
-      methods: createWorkspaceRouteDto.httpMethods,
-      status: createWorkspaceRouteDto.status
-    });
-
-    await workspaceRoute.save();
-
-    const workspaceRouteRequest = this.workspaceRouteRequestRepository.create({ routeId: workspaceRoute.id });
-
-    await workspaceRouteRequest.save();
-
-    const workspaceRouteResponse = this.workspaceRouteResponseRepository.create({ routeId: workspaceRoute.id });
-
-    await workspaceRouteResponse.save();
-
-    return {
-      status: HttpStatus.CREATED,
-      message: 'Route created successfully'
-    };
-  }
-
   async inviteUsers(slug: string, inviteUsersDto: InviteUsersDto, currentUser: SafeUser): Promise<HttpResponse> {
     if (!inviteUsersDto.emails.length) {
       throw new BadRequestException('No emails provided');
@@ -253,6 +192,31 @@ export class WorkspacesService {
     };
   }
 
+  async excludeMember(slug: string, excludeUserFromWorkspaceDto: ExcludeUserFromWorkspaceDto): Promise<HttpResponse> {
+    const workspace = await this.workspaceRepository.getWorkspaceBySlug(slug);
+
+    const userId = await this.userRepository.getId({ email: excludeUserFromWorkspaceDto.email });
+
+    if (!userId) {
+      throw new NotFoundException(
+        `User with email ${excludeUserFromWorkspaceDto.email} not found in '${slug}' workspace.`
+      );
+    }
+
+    const membershipRecord = await this.workspaceMembershipRepository.getUserMembership(workspace.id, userId);
+
+    if (!membershipRecord) {
+      throw new NotFoundException(`User ${excludeUserFromWorkspaceDto.email} is not a member of '${slug}' workspace.`);
+    }
+
+    await membershipRecord.remove();
+
+    return {
+      status: HttpStatus.ACCEPTED,
+      message: 'User excluded successfully'
+    };
+  }
+
   async acceptInvite(slug: string, inviteCode: string, response: Response): Promise<HttpResponse> {
     const workspace = await this.workspaceRepository.getWorkspaceBySlug(slug);
 
@@ -266,7 +230,7 @@ export class WorkspacesService {
     });
 
     if (!workspaceInvitation) {
-      throw new NotFoundException('Invite is not found');
+      throw new NotFoundException('Invitation is not found');
     }
 
     const user = await this.userRepository.findOne(workspaceInvitation.userId);
@@ -287,19 +251,6 @@ export class WorkspacesService {
       status: HttpStatus.MOVED_PERMANENTLY,
       message: 'Invite accepted'
     };
-  }
-
-  private buildRoutePath(path: string): string {
-    return path.replace(/\/$/, '').replace(/^\//, '');
-  }
-
-  private buildRoutePattern(route: string): RegExp {
-    return new RegExp(
-      `^${route
-        .replace(/\*{2}/g, '.*')
-        .replace(/:[^/]+/g, '[^/]+')
-        .replace(/[^/.]\*{1}/g, '[^/]+')}`
-    );
   }
 
   private async getWorkspaceMembership(slug: string): Promise<WorkspaceMember[]> {

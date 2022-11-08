@@ -8,9 +8,9 @@ export const getSuitableRoute = (routeA: URLLayer | undefined, routeB: URLLayer 
     return routeA;
   }
 
-  if (routeA.value === original.value) {
+  if (routeA.value === original.value && routeB.value !== original.value) {
     return routeA;
-  } else if (routeB.value === original.value) {
+  } else if (routeB.value === original.value && routeA.value !== original.value) {
     return routeB;
   } else if (routeA.value > routeB.value) {
     return routeA;
@@ -46,3 +46,13 @@ export const getSuitableRoute = (routeA: URLLayer | undefined, routeB: URLLayer 
     return routeB;
   }
 };
+
+export const buildRoutePath = (path: string): string => path.replace(/\/$/, '').replace(/^\//, '');
+
+export const buildRoutePattern = (route: string): RegExp =>
+  new RegExp(
+    `^${route
+      .replace(/\*{2}/g, '.*')
+      .replace(/:[^/]+/g, '[^/]+')
+      .replace(/[^/.]\*{1}/g, '[^/]+')}`
+  );

@@ -1,25 +1,21 @@
+import { SecurityConfig } from './../common/providers/config/security.config';
+import { ConfigModule } from './../common/providers/config/config.module';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { WorkspaceRouteResponseHeaderRepository } from '../common/db/repositories/workspace-route-response-header.entity';
+import { S3Module } from 'nestjs-s3';
 import { UserRepository } from './../common/db/repositories/user.repository';
-import { WorkspaceInvitationRepository } from './../common/db/repositories/workspace-invitation.repository';
 import { WorkspaceMembershipRepository } from './../common/db/repositories/workspace-membership.repository';
 import { WorkspaceRoleRepository } from './../common/db/repositories/workspace-role.repository';
 import { WorkspaceRouteRequestRepository } from './../common/db/repositories/workspace-route-request.repository';
+import { WorkspaceRouteResponseHeaderRepository } from './../common/db/repositories/workspace-route-response-header.entity';
 import { WorkspaceRouteResponseRepository } from './../common/db/repositories/workspace-route-response.repository';
 import { WorkspaceRouteRepository } from './../common/db/repositories/workspace-route.repository';
 import { WorkspaceRepository } from './../common/db/repositories/workspace.repository';
-import { ConfigModule } from './../common/providers/config/config.module';
-import { EmailModule } from './../common/providers/email/email.module';
-import { SecurityModule } from './../common/providers/security/security.module';
-import { WorkspacesController } from './workspaces.controller';
-import { WorkspacesService } from './workspaces.service';
+import { WorkspaceRoutesController } from './workspace-routes.controller';
+import { WorkspaceRoutesService } from './workspace-routes.service';
 
 @Module({
   imports: [
-    SecurityModule,
-    EmailModule,
-    ConfigModule,
     TypeOrmModule.forFeature([
       UserRepository,
       WorkspaceMembershipRepository,
@@ -28,11 +24,21 @@ import { WorkspacesService } from './workspaces.service';
       WorkspaceRouteRepository,
       WorkspaceRouteRequestRepository,
       WorkspaceRouteResponseHeaderRepository,
-      WorkspaceRouteResponseRepository,
-      WorkspaceInvitationRepository
-    ])
+      WorkspaceRouteResponseRepository
+    ]),
+    ConfigModule,
+    S3Module.forRootAsync({
+      imports: [ConfigModule],
+      inject: [SecurityConfig],
+      useFactory: (securityConfig: SecurityConfig) => ({
+        config: {
+          accessKeyId: securityConfig.s3AccessKeyId,
+          secretAccessKey: securityConfig.s3AccessSecretKey
+        }
+      })
+    })
   ],
-  controllers: [WorkspacesController],
-  providers: [WorkspacesService]
+  controllers: [WorkspaceRoutesController],
+  providers: [WorkspaceRoutesService]
 })
-export class WorkspacesModule {}
+export class WorkspaceRoutesModule {}

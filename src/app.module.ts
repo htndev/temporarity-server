@@ -10,6 +10,7 @@ import { DatabaseConfig } from './common/providers/config/database.config';
 import { RequestLoggerMiddleware } from './middleware/logger.middleware';
 import { WorkspacesModule } from './workspaces/workspaces.module';
 import { RoutesModule } from './routes/routes.module';
+import { WorkspaceRoutesModule } from './workspace-routes/workspace-routes.module';
 
 @Module({
   imports: [
@@ -42,7 +43,8 @@ import { RoutesModule } from './routes/routes.module';
     AuthModule,
     CommonModule,
     WorkspacesModule,
-    RoutesModule
+    RoutesModule,
+    WorkspaceRoutesModule
   ],
   providers: [{ provide: APP_PIPE, useValue: new ValidationPipe() }]
 })

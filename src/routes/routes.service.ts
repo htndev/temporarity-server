@@ -35,15 +35,16 @@ export class RoutesService {
       return this.notFoundError(incomingRoute, method);
     }
 
-    if (!route.methods.includes(method)) {
+    if (!route.methods.includes(method) || !route.methods.includes(HttpMethod.ALL)) {
       return this.notFoundError(incomingRoute, method);
     }
 
-    return { incomingRoute, slug, query, body, headers, workspace, route };
+    return {
+      route
+    };
   }
 
   private async notFoundError(path: string, method: HttpMethod) {
-    // TODO: return user's custom error message
     const errorMessage = `Route /${path} with method ${method} not found`;
 
     throw new NotFoundException(errorMessage);

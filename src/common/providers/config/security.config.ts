@@ -17,6 +17,10 @@ interface SecurityConfigProperties {
   JWT_REFRESH_TOKEN_SECRET: string;
   JWT_ACCESS_TOKEN_EXPIRES_IN: number;
   JWT_REFRESH_TOKEN_EXPIRES_IN: number;
+  S3_ACCESS_KEY_ID: string;
+  S3_SECRET_ACCESS_KEY: string;
+  S3_BUCKET_NAME: string;
+  S3_BUCKET_FOLDER: string;
 }
 
 type AuthProps = { [k in AuthScope]: string | number };
@@ -36,7 +40,11 @@ export class SecurityConfig extends BaseConfig<SecurityConfigProperties> {
       JWT_ACCESS_TOKEN_SECRET: Joi.string().required(),
       JWT_REFRESH_TOKEN_SECRET: Joi.string().required(),
       JWT_ACCESS_TOKEN_EXPIRES_IN: Joi.number().required(),
-      JWT_REFRESH_TOKEN_EXPIRES_IN: Joi.number().required()
+      JWT_REFRESH_TOKEN_EXPIRES_IN: Joi.number().required(),
+      S3_ACCESS_KEY_ID: Joi.string().required(),
+      S3_SECRET_ACCESS_KEY: Joi.string().required(),
+      S3_BUCKET_NAME: Joi.string().required(),
+      S3_BUCKET_FOLDER: Joi.string().required()
     });
   }
 
@@ -74,5 +82,21 @@ export class SecurityConfig extends BaseConfig<SecurityConfigProperties> {
 
   get jwtRefreshTokenExpiresIn(): number {
     return this.config.JWT_REFRESH_TOKEN_EXPIRES_IN;
+  }
+
+  get s3AccessKeyId(): string {
+    return this.config.S3_ACCESS_KEY_ID;
+  }
+
+  get s3AccessSecretKey(): string {
+    return this.config.S3_SECRET_ACCESS_KEY;
+  }
+
+  get s3BucketFolder(): string {
+    return this.config.S3_BUCKET_FOLDER;
+  }
+
+  get s3BucketName(): string {
+    return this.config.S3_BUCKET_NAME;
   }
 }

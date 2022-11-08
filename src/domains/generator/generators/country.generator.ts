@@ -3,6 +3,6 @@ import { BaseGenerator } from './base.generator';
 
 export class CountryGenerator implements BaseGenerator {
   execute() {
-    return generator.country();
+    return generator.country({ full: true });
   }
 }

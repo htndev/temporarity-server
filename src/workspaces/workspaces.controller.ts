@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Res, UseGuards } from '@nestjs/common';
 import { Response } from 'express';
 import { GrantWorkspaceExistence } from 'src/common/decorators/grant-workspace-existence.decorator';
 import { Role } from '../common/constants/role.constant';
@@ -8,8 +8,8 @@ import { WorkspaceRoles } from '../common/decorators/workspace-roles.decorator';
 import { JwtAccessTokenGuard } from './../common/guards/jwt-access-token.guard';
 import { WorkspaceAccessGuard } from './../common/guards/workspace-access.guard';
 import { SafeUser } from './../common/types/auth.type';
-import { CreateWorkspaceRouteDto } from './dto/create-workspace-route.dto';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
+import { ExcludeUserFromWorkspaceDto } from './dto/exclude-user-from-workspace.dto';
 import { InviteUsersDto } from './dto/invite-users.dto';
 import { WorkspacesService } from './workspaces.service';
 
@@ -23,20 +23,20 @@ export class WorkspacesController {
     return this.workspacesService.create(createWorkspaceDto, user);
   }
 
-  @Post('/:slug')
-  @WorkspaceRoles([Role.Owner, Role.Editor])
-  @GrantWorkspaceExistence()
-  @UseGuards(WorkspaceAccessGuard)
-  createRoute(@Param('slug') slug: string, @Body() createWorkspaceRoute: CreateWorkspaceRouteDto) {
-    return this.workspacesService.createRoute(slug, createWorkspaceRoute);
-  }
-
   @Post('/:slug/invite')
   @WorkspaceRoles([Role.Owner])
   @GrantWorkspaceExistence()
   @UseGuards(WorkspaceAccessGuard)
   inviteUsers(@Param('slug') slug: string, @Body() inviteUsersDto: InviteUsersDto, @User() currentUser: SafeUser) {
     return this.workspacesService.inviteUsers(slug, inviteUsersDto, currentUser);
+  }
+
+  @Delete('/:slug/exclude')
+  @WorkspaceRoles([Role.Owner])
+  @GrantWorkspaceExistence()
+  @UseGuards(WorkspaceAccessGuard)
+  excludeMember(@Param('slug') slug: string, @Body() excludeUserFromWorkspaceDto: ExcludeUserFromWorkspaceDto) {
+    return this.workspacesService.excludeMember(slug, excludeUserFromWorkspaceDto);
   }
 
   @Public()

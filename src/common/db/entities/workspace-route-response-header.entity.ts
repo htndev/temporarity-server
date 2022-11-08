@@ -2,8 +2,8 @@ import { ObjectID } from 'mongodb';
 import { Column, Entity } from 'typeorm';
 import { BaseEntity } from './base.entity';
 
-@Entity({ name: 'workspace_route_request_headers' })
-export class WorkspaceRouteRequestHeader extends BaseEntity {
+@Entity({ name: 'workspace_route_response_headers' })
+export class WorkspaceRouteResponseHeader extends BaseEntity {
   @Column()
   routeRequestId: ObjectID;
 
@@ -11,5 +11,5 @@ export class WorkspaceRouteRequestHeader extends BaseEntity {
   header: string;
 
   @Column()
-  value: string;
+  value: any;
 }

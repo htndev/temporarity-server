@@ -13,5 +13,5 @@ export class WorkspaceRouteResponse extends BaseEntity {
   responseType: WorkspaceRouteResponseType;
 
   @Column({ nullable: true })
-  schema: Nullable<ContentType | ContentType[]>;
+  schema: Nullable<ContentType>;
 }

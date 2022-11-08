@@ -1,3 +1,6 @@
+import { Nullable } from './../../domains/generator/utils/base.type';
+import { Boxed } from './base.type';
+
 export enum HttpMethod {
   GET = 'GET',
   POST = 'POST',
@@ -5,7 +8,8 @@ export enum HttpMethod {
   DELETE = 'DELETE',
   PATCH = 'PATCH',
   OPTIONS = 'OPTIONS',
-  HEAD = 'HEAD'
+  HEAD = 'HEAD',
+  ALL = 'ALL'
 }
 
 export enum Placeholder {
@@ -14,3 +18,5 @@ export enum Placeholder {
   Param = ':',
   Word = 'word'
 }
+
+export type RouteResponseType = Nullable<string | Boxed<Record<string, any>>>;
