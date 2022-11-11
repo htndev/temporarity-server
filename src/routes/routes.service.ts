@@ -43,9 +43,7 @@ export class RoutesService {
   }) {
     const workspace = await this.workspaceRepository.getWorkspaceBySlug(slug);
     const incomingRoute = request.params[0];
-    console.log(incomingRoute);
     const route = await this.workspaceRouteRepository.getRouteByPath(workspace.id, incomingRoute);
-    console.log(route);
 
     if (!route) {
       return this.notFoundError(incomingRoute, method);

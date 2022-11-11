@@ -64,7 +64,6 @@ export class WorkspaceRoutesService {
     let insertData: RouteResponseType;
 
     if (createWorkspaceRouteDto.responseType === WorkspaceRouteResponseType.File && possibleBuffer instanceof Buffer) {
-      console.log('File detected', createWorkspaceRouteDto.response);
       const contentType = (createWorkspaceRouteDto.response as any).mimetype;
       const ext = mime.extension(contentType);
       const key = v4();
