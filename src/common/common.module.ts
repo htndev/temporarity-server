@@ -1,3 +1,5 @@
+import { provideCustomRepository } from 'src/common/utils/db.util';
+import { User } from './db/entities/user.entity';
 import { JwtRefreshTokenStrategy } from './../strategies/jwt-refresh.strategy';
 import { JwtAccessTokenStrategy } from './../strategies/jwt-access.strategy';
 import { UserRepository } from './db/repositories/user.repository';
@@ -11,7 +13,7 @@ import { SecurityConfig } from './providers/config/security.config';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([UserRepository]),
+    TypeOrmModule.forFeature([User]),
     PassportModule.register({
       defaultStrategy: 'jwt'
     }),
@@ -31,7 +33,14 @@ import { SecurityConfig } from './providers/config/security.config';
     }),
     ConfigModule
   ],
-  providers: [PassportModule, JwtModule, ConfigModule, JwtAccessTokenStrategy, JwtRefreshTokenStrategy],
+  providers: [
+    PassportModule,
+    JwtModule,
+    ConfigModule,
+    JwtAccessTokenStrategy,
+    JwtRefreshTokenStrategy,
+    provideCustomRepository(User, UserRepository)
+  ],
   exports: [PassportModule, JwtModule, ConfigModule, JwtAccessTokenStrategy, JwtRefreshTokenStrategy]
 })
 export class CommonModule {}

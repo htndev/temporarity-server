@@ -1,4 +1,4 @@
-import { Column, Entity, Index, ObjectID, ObjectIdColumn } from 'typeorm';
+import { Column, Entity, Index } from 'typeorm';
 import { BaseEntity } from './base.entity';
 
 @Entity({ name: 'workspaces' })

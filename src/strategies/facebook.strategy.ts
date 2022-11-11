@@ -1,4 +1,5 @@
-import { HttpService, Inject } from '@nestjs/common';
+import { Inject } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
 import { PassportStrategy } from '@nestjs/passport';
 import { Profile, Strategy } from 'passport-facebook';
 import { map } from 'rxjs';

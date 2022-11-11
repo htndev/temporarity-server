@@ -45,6 +45,8 @@ export const getSuitableRoute = (routeA: URLLayer | undefined, routeB: URLLayer 
 
     return routeB;
   }
+
+  return routeA;
 };
 
 export const buildRoutePath = (path: string): string => path.replace(/\/$/, '').replace(/^\//, '');

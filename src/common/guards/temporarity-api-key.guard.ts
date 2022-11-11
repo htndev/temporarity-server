@@ -25,7 +25,7 @@ export class TemporarityApiKeyGuard implements CanActivate {
       throw new UnauthorizedException('Missing API key');
     }
 
-    const workspace = await this.workspaceRepository.findOne({ slug: request.params.slug });
+    const workspace = await this.workspaceRepository.findOne({ where: { slug: request.params.slug } });
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');

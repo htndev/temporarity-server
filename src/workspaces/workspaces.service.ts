@@ -1,6 +1,7 @@
 import { BadRequestException, ConflictException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { Response } from 'express';
 import { ObjectID } from 'mongodb';
+import { In } from 'typeorm';
 import { Role } from '../common/constants/role.constant';
 import { EMAIL_INVITATION_TEMPLATE } from './../common/constants/email.constant';
 import { Workspace as WorkspaceEntity } from './../common/db/entities/workspace.entity';
@@ -68,7 +69,7 @@ export class WorkspacesService {
 
   async findAll(user: SafeUser): Promise<HttpResponse<{ workspaces: Workspace[] }>> {
     const userId = await this.userRepository.getId({ email: user.email });
-    const userMemberships = await this.workspaceMembershipRepository.find({ userId: userId });
+    const userMemberships = await this.workspaceMembershipRepository.find({ where: { userId: userId } });
     const workspaces = await Promise.all(
       userMemberships.map(async (membership) => {
         const workspace = await this.workspaceRepository.getShortInformation(membership.workspaceId);
@@ -142,9 +143,7 @@ export class WorkspacesService {
 
     const registeredUsers = await this.userRepository.find({
       where: {
-        email: {
-          $in: inviteUsersDto.emails
-        }
+        email: In(inviteUsersDto.emails)
       }
     });
 
@@ -159,8 +158,10 @@ export class WorkspacesService {
     await Promise.all(
       notMembers.map(async (user) => {
         const existingWorkspaceInvitation = await this.workspaceInvitationRepository.findOne({
-          userId: user.id,
-          workspaceId: workspace.id
+          where: {
+            userId: user.id,
+            workspaceId: workspace.id
+          }
         });
 
         if (existingWorkspaceInvitation) {
@@ -225,8 +226,10 @@ export class WorkspacesService {
     }
 
     const workspaceInvitation = await this.workspaceInvitationRepository.findOne({
-      workspaceId: workspace.id,
-      inviteCode
+      where: {
+        workspaceId: workspace.id,
+        inviteCode
+      }
     });
 
     if (!workspaceInvitation) {
@@ -255,7 +258,7 @@ export class WorkspacesService {
 
   private async getWorkspaceMembership(slug: string): Promise<WorkspaceMember[]> {
     const workspace = await this.workspaceRepository.getWorkspaceBySlug(slug);
-    const workspaceMembership = await this.workspaceMembershipRepository.find({ workspaceId: workspace.id });
+    const workspaceMembership = await this.workspaceMembershipRepository.find({ where: { workspaceId: workspace.id } });
     const workspaceUsers = await this.userRepository.safeFindUsers(workspaceMembership.map((wm) => wm.userId));
 
     const usersWithRoles = await Promise.all(
@@ -287,7 +290,7 @@ export class WorkspacesService {
       return false;
     }
 
-    const user = await this.userRepository.findOne({ email: userEmail });
+    const user = await this.userRepository.findOne({ where: { email: userEmail } });
     const hasAccess = await this.workspaceMembershipRepository.isExists({ workspaceId: workspace.id, userId: user.id });
 
     return hasAccess;

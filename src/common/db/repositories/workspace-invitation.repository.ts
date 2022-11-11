@@ -1,9 +1,9 @@
-import { EntityRepository } from 'typeorm';
+import { Injectable } from '@nestjs/common';
 import { v4 } from 'uuid';
 import { WorkspaceInvitation } from './../entities/workspace-invitation.entity';
 import { BaseRepository } from './base.repository';
 
-@EntityRepository(WorkspaceInvitation)
+@Injectable()
 export class WorkspaceInvitationRepository extends BaseRepository<WorkspaceInvitation> {
   async generateInviteCode(): Promise<string> {
     const id = v4();

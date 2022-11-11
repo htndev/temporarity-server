@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { ObjectID } from 'mongodb';
-import { EntityRepository } from 'typeorm';
 import { Route } from './../../../workspace-routes/entities/route.entity';
 import { URLLayer } from './../../entities/url-layer.entity';
 import { Nullable } from './../../types/base.type';
@@ -13,7 +12,6 @@ import { WorkspaceRoute } from './../entities/workspace-route.entity';
 import { BaseRepository } from './base.repository';
 
 @Injectable()
-@EntityRepository(WorkspaceRoute)
 export class WorkspaceRouteRepository extends BaseRepository<WorkspaceRoute> {
   async getRouteByPath(workspaceId: ObjectID, path: string): Promise<WorkspaceRoute | null> {
     const routes = await this.findWorkspaceRoutes(workspaceId, path);
@@ -23,7 +21,8 @@ export class WorkspaceRouteRepository extends BaseRepository<WorkspaceRoute> {
     }
 
     if (routes.length === 1) {
-      return routes[0];
+      const suitable = getSuitableRoute(new URLLayer(path), new URLLayer(routes[0].path), new URLLayer(path));
+      return suitable.path === path ? null : routes[0];
     }
 
     const incomingRouteLayer = new URLLayer(path);
@@ -52,13 +51,13 @@ export class WorkspaceRouteRepository extends BaseRepository<WorkspaceRoute> {
   }
 
   async findWorkspaceRoutes(workspaceId: ObjectID, path: string): Promise<WorkspaceRoute[]> {
-    const routes = await this.find({ workspaceId });
+    const routes = await this.find({ where: { workspaceId } });
 
-    return routes.filter((route) => route.pathPattern.test(path)) || null;
+    return routes.filter((route) => route.pathPattern.test(`/${path}`)) || null;
   }
 
   async getRoutes(workspaceId: ObjectID): Promise<Route[]> {
-    return this.find({ workspaceId }).then((routes) =>
+    return this.find({ where: { workspaceId } }).then((routes) =>
       routes.map((route) => new Route(route.path, route.methods, route.status))
     );
   }

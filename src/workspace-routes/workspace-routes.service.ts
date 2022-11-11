@@ -1,5 +1,5 @@
 import { BadRequestException, ConflictException, HttpStatus, Injectable } from '@nestjs/common';
-import { fromBuffer } from 'file-type';
+// import { fromBuffer } from 'file-type';
 import { InjectS3, S3 } from 'nestjs-s3';
 import { v4 } from 'uuid';
 import { ALLOWED_HTTP_METHODS } from './../common/constants/routes.constant';
@@ -13,6 +13,8 @@ import { WorkspaceRouteResponseType } from './../common/types/workspace-route-re
 import { RouteResponseType } from './../common/types/workspace-route.type';
 import { buildRoutePath } from './../common/utils/workspace-routes.util';
 import { CreateWorkspaceRouteDto } from './entities/create-workspace-route.dto';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const mime = require('mime-types');
 
 @Injectable()
 export class WorkspaceRoutesService {
@@ -53,15 +55,18 @@ export class WorkspaceRoutesService {
     );
 
     if (similarRoute) {
-      throw new ConflictException();
-      // `Route '${createWorkspaceRouteDto.path}' is conflicting with '${similarRoute.path}' route.`
+      throw new ConflictException(
+        `Route '${createWorkspaceRouteDto.path}' is conflicting with '${similarRoute.path}' route.`
+      );
     }
 
     const possibleBuffer: Buffer = (createWorkspaceRouteDto.response as any)?.buffer;
     let insertData: RouteResponseType;
 
     if (createWorkspaceRouteDto.responseType === WorkspaceRouteResponseType.File && possibleBuffer instanceof Buffer) {
-      const { ext } = await fromBuffer(possibleBuffer);
+      console.log('File detected', createWorkspaceRouteDto.response);
+      const contentType = (createWorkspaceRouteDto.response as any).mimetype;
+      const ext = mime.extension(contentType);
       const key = v4();
       const path = `${this.securityConfig.s3BucketFolder}/${key}.${ext}`;
       const { Location: url } = await await this.s3Client

@@ -1,12 +1,13 @@
+import { Injectable } from '@nestjs/common';
+import { ObjectID } from 'typeorm';
 import { Role } from './../../constants/role.constant';
-import { EntityRepository, ObjectID } from 'typeorm';
 import { WorkspaceRole } from './../entities/workspace-role.entity';
 import { BaseRepository } from './base.repository';
 
-@EntityRepository(WorkspaceRole)
+@Injectable()
 export class WorkspaceRoleRepository extends BaseRepository<WorkspaceRole> {
   async getRoleById(roleId: ObjectID) {
-    return this.findOne(roleId);
+    return this.findOneById(roleId);
   }
 
   async getEditorRoleId(): Promise<ObjectID> {
@@ -18,7 +19,7 @@ export class WorkspaceRoleRepository extends BaseRepository<WorkspaceRole> {
   }
 
   private async getRoleId(userRole: Role): Promise<ObjectID> {
-    const role = await this.findOne({ name: userRole });
+    const role = await this.findOne({ where: { name: userRole } });
     return role.id;
   }
 }

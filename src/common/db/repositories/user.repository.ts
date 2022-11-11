@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { ObjectID } from 'mongodb';
-import { EntityRepository } from 'typeorm';
 import { AuthScope } from './../../constants/auth.constant';
 import { SafeUser } from './../../types/auth.type';
 import { Nullable } from './../../types/base.type';
@@ -9,7 +8,6 @@ import { User } from './../entities/user.entity';
 import { BaseRepository } from './base.repository';
 
 @Injectable()
-@EntityRepository(User)
 export class UserRepository extends BaseRepository<User> {
   async createOauthUser({
     email,
@@ -37,7 +35,7 @@ export class UserRepository extends BaseRepository<User> {
   }
 
   async safeFindUser({ email }: { email: string }): Promise<Nullable<SafeUser>> {
-    const user = await this.findOne({ email });
+    const user = await this.findOne({ where: { email } });
 
     if (!user) {
       return null;

@@ -7,6 +7,7 @@ import {
   UnauthorizedException
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Role } from '../constants/role.constant';
 import { UserRepository } from '../db/repositories/user.repository';
 import { WorkspaceMembershipRepository } from './../db/repositories/workspace-membership.repository';
@@ -19,10 +20,11 @@ import { SafeUser } from './../types/auth.type';
 export class WorkspaceAccessGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
-    private readonly workspaceRepository: WorkspaceRepository,
+    @InjectRepository(WorkspaceRepository) private readonly workspaceRepository: WorkspaceRepository,
+    @InjectRepository(WorkspaceMembershipRepository)
     private readonly workspaceMembershipRepository: WorkspaceMembershipRepository,
-    private readonly workspaceRoleRepository: WorkspaceRoleRepository,
-    private readonly userRepository: UserRepository
+    @InjectRepository(WorkspaceRoleRepository) private readonly workspaceRoleRepository: WorkspaceRoleRepository,
+    @InjectRepository(UserRepository) private readonly userRepository: UserRepository
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {

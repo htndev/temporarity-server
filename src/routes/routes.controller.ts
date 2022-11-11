@@ -1,10 +1,10 @@
-import { HttpMethod } from './../common/types/workspace-route.type';
-import { GrantWorkspaceGuard } from './../common/guards/grant-workspace.guard';
-import { All, Body, Controller, Headers, Param, Query, Req, UseGuards } from '@nestjs/common';
-import { Request } from 'express';
-import { TemporarityApiKeyGuard } from '../common/guards/temporarity-api-key.guard';
-import { RoutesService } from './routes.service';
+import { All, Body, Controller, Headers, Param, Query, Req, Res, UseGuards } from '@nestjs/common';
+import { Request, Response } from 'express';
 import { RequestMethod } from '../common/decorators/request-method.decorator';
+import { TemporarityApiKeyGuard } from '../common/guards/temporarity-api-key.guard';
+import { GrantWorkspaceGuard } from './../common/guards/grant-workspace.guard';
+import { HttpMethod } from './../common/types/workspace-route.type';
+import { RoutesService } from './routes.service';
 
 @UseGuards(TemporarityApiKeyGuard)
 @Controller('routes')
@@ -19,8 +19,9 @@ export class RoutesController {
     @Body() body: any,
     @Headers() headers: Record<string, unknown>,
     @Req() request: Request,
+    @Res() response: Response,
     @RequestMethod() method: HttpMethod
   ) {
-    return this.routesService.incomingRequest({ slug, query, body, headers, request, method });
+    return this.routesService.incomingRequest({ slug, query, body, headers, request, method, response });
   }
 }

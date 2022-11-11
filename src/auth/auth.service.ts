@@ -59,7 +59,7 @@ export class AuthService {
   }
 
   async credentialsSignIn({ email, password }: CredentialsSignInDto, response: Response): Promise<TokenResponse> {
-    const user = await this.userRepository.findOne({ email });
+    const user = await this.userRepository.findOne({ where: { email } });
 
     if (!user) {
       this.throwWrongEmailOrPassword();
@@ -100,7 +100,7 @@ export class AuthService {
     }
 
     if (isUserWithEmailExist) {
-      const user = await this.userRepository.findOne({ email });
+      const user = await this.userRepository.findOne({ where: { email } });
       const identityProvider = await this.identityProviderRepository.getIdentityProviderByUser(user);
 
       if (identityProvider !== provider) {
@@ -111,7 +111,7 @@ export class AuthService {
     const user =
       !isUserWithEmailExist && !isSignedUpByIdentityProvider
         ? await this.userRepository.createOauthUser({ email, fullName, profilePicture, provider, providerId: id })
-        : await this.userRepository.findOne({ email });
+        : await this.userRepository.findOne({ where: { email } });
 
     const tokens = await this.tokenService.generateTokens({ email: user.email, fullName: user.fullName });
 
