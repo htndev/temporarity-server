@@ -1,7 +1,7 @@
 import { IsArray, IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { HttpMethod } from '../../common/types/workspace-route.type';
-import { Boxed, Nullable } from './../../common/types/base.type';
-import { WorkspaceRouteResponseType } from './../../common/types/workspace-route-response.type';
+import { Boxed, Nullable } from '../../common/types/base.type';
+import { WorkspaceRouteResponseType } from '../../common/types/workspace-route-response.type';
 
 export class CreateWorkspaceRouteDto {
   @IsNotEmpty()

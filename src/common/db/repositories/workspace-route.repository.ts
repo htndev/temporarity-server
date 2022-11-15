@@ -1,19 +1,40 @@
 import { Injectable } from '@nestjs/common';
 import { ObjectID } from 'mongodb';
-import { Route } from './../../../workspace-routes/entities/route.entity';
-import { URLLayer } from './../../entities/url-layer.entity';
-import { Nullable } from './../../types/base.type';
-import { WorkspaceRouteResponseType } from './../../types/workspace-route-response.type';
-import { HttpMethod } from './../../types/workspace-route.type';
-import { buildRoutePath, buildRoutePattern, getSuitableRoute } from './../../utils/workspace-routes.util';
-import { WorkspaceRouteRequest } from './../entities/workspace-route-request.entity';
-import { WorkspaceRouteResponse } from './../entities/workspace-route-response.entity';
-import { WorkspaceRoute } from './../entities/workspace-route.entity';
+import { Route } from '../../../workspace-routes/entities/route.entity';
+import { URLLayer } from '../../entities/url-layer.entity';
+import { Nullable } from '../../types/base.type';
+import { WorkspaceRouteResponseType } from '../../types/workspace-route-response.type';
+import { HttpMethod } from '../../types/workspace-route.type';
+import { buildRoutePath, buildRoutePattern, getSuitableRoute } from '../../utils/workspace-routes.util';
+import { WorkspaceRouteRequest } from '../entities/workspace-route-request.entity';
+import { WorkspaceRouteResponse } from '../entities/workspace-route-response.entity';
+import { WorkspaceRoute } from '../entities/workspace-route.entity';
 import { BaseRepository } from './base.repository';
 
 @Injectable()
 export class WorkspaceRouteRepository extends BaseRepository<WorkspaceRoute> {
   async getRouteByPath(workspaceId: ObjectID, path: string): Promise<WorkspaceRoute | null> {
+    const routes = await this.findWorkspaceRoutes(workspaceId, path);
+
+    if (!routes.length) {
+      return null;
+    }
+
+    if (routes.length === 1) {
+      const suitable = getSuitableRoute(new URLLayer(path), new URLLayer(routes[0].path), new URLLayer(path));
+      return suitable.path === path ? null : routes[0];
+    }
+
+    const incomingRouteLayer = new URLLayer(path);
+
+    const theMostSuitableLayer = routes
+      .map((route) => new URLLayer(route.path))
+      .reduce((best, current) => getSuitableRoute(best, current, incomingRouteLayer));
+
+    return routes.find((route) => route.path === theMostSuitableLayer.path);
+  }
+
+  async getRouteByPathByMethods(workspaceId: ObjectID, path: string): Promise<WorkspaceRoute | null> {
     const routes = await this.findWorkspaceRoutes(workspaceId, path);
 
     if (!routes.length) {
@@ -58,7 +79,7 @@ export class WorkspaceRouteRepository extends BaseRepository<WorkspaceRoute> {
 
   async getRoutes(workspaceId: ObjectID): Promise<Route[]> {
     return this.find({ where: { workspaceId } }).then((routes) =>
-      routes.map((route) => new Route(route.path, route.methods, route.status))
+      routes.map((route) => new Route(route.id, route.path, route.methods, route.status))
     );
   }
 
@@ -91,5 +112,11 @@ export class WorkspaceRouteRepository extends BaseRepository<WorkspaceRoute> {
     await workspaceRouteResponse.save();
 
     return workspaceRoute;
+  }
+
+  async getRoute(workspaceId: ObjectID, id: string): Promise<WorkspaceRoute | null> {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    return this.findOne({ where: { _id: ObjectID(id), workspaceId } });
   }
 }
