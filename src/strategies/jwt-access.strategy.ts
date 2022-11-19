@@ -2,9 +2,9 @@ import { UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { JwtStrategy } from './../common/constants/auth.constant';
-import { UserRepository } from './../common/db/repositories/user.repository';
-import { SecurityConfig } from './../common/providers/config/security.config';
+import { JwtStrategy } from '../common/constants/auth.constant';
+import { UserRepository } from '../common/db/repositories/user.repository';
+import { SecurityConfig } from '../common/providers/config/security.config';
 
 export class JwtAccessTokenStrategy extends PassportStrategy(Strategy, JwtStrategy.Access) {
   constructor(

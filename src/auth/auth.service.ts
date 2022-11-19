@@ -1,17 +1,18 @@
+import { UserPreferencesRepository } from './../common/db/repositories/user-preferences.repository';
 import { BadRequestException, ConflictException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'express';
 import { UserRepository } from '../common/db/repositories/user.repository';
 import { AppConfig } from '../common/providers/config';
 import { OAuthProviderData } from '../common/types/auth.type';
-import { MILLISECOND } from './../common/constants/time.constant';
-import { IdentityProviderRepository } from './../common/db/repositories/identity-provider.repository';
-import { SecurityConfig } from './../common/providers/config/security.config';
-import { TokenService } from './../common/providers/token/token.service';
-import { CookiesType } from './../common/types/base.type';
-import { HttpResponse } from './../common/types/response.type';
-import { Token } from './../common/types/token.type';
-import { redirect } from './../common/utils/redirect.util';
+import { MILLISECOND } from '../common/constants/time.constant';
+import { IdentityProviderRepository } from '../common/db/repositories/identity-provider.repository';
+import { SecurityConfig } from '../common/providers/config/security.config';
+import { TokenService } from '../common/providers/token/token.service';
+import { CookiesType } from '../common/types/base.type';
+import { HttpResponse } from '../common/types/response.type';
+import { Token } from '../common/types/token.type';
+import { redirect } from '../common/utils/redirect.util';
 import { CredentialsSignInDto } from './dto/signin.dto';
 import { CredentialsSignUpDto } from './dto/signup.dto';
 
@@ -28,6 +29,7 @@ export class AuthService {
     @InjectRepository(UserRepository) private readonly userRepository: UserRepository,
     @InjectRepository(IdentityProviderRepository)
     private readonly identityProviderRepository: IdentityProviderRepository,
+    private readonly userPreferencesRepository: UserPreferencesRepository,
     private readonly tokenService: TokenService
   ) {}
 
@@ -39,7 +41,7 @@ export class AuthService {
   }
 
   async credentialsSignUp(
-    { email, password, fullName }: CredentialsSignUpDto,
+    { email, password, fullName, language }: CredentialsSignUpDto,
     response: Response
   ): Promise<TokenResponse> {
     if (await this.userRepository.isExists({ email })) {
@@ -47,6 +49,9 @@ export class AuthService {
     }
     const user = this.userRepository.create({ fullName, email, password });
     await user.save();
+
+    const userPreferences = this.userPreferencesRepository.create({ userId: user.id, language: language ?? 'en-US' });
+    await userPreferences.save();
 
     const tokens = await this.tokenService.generateTokens({ email, fullName });
 
@@ -60,6 +65,7 @@ export class AuthService {
 
   async credentialsSignIn({ email, password }: CredentialsSignInDto, response: Response): Promise<TokenResponse> {
     const user = await this.userRepository.findOne({ where: { email } });
+    console.log(user);
 
     if (!user) {
       this.throwWrongEmailOrPassword();

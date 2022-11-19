@@ -1,13 +1,26 @@
-import { Body, Controller, Get, Param, Patch, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Role } from './../common/constants/role.constant';
-import { GrantWorkspaceExistence } from './../common/decorators/grant-workspace-existence.decorator';
-import { WorkspaceRoles } from './../common/decorators/workspace-roles.decorator';
-import { JwtAccessTokenGuard } from './../common/guards/jwt-access-token.guard';
-import { WorkspaceAccessGuard } from './../common/guards/workspace-access.guard';
+import { Role } from '../common/constants/role.constant';
+import { GrantWorkspaceExistence } from '../common/decorators/grant-workspace-existence.decorator';
+import { WorkspaceRoles } from '../common/decorators/workspace-roles.decorator';
+import { JwtAccessTokenGuard } from '../common/guards/jwt-access-token.guard';
+import { WorkspaceAccessGuard } from '../common/guards/workspace-access.guard';
+import { WorkspaceRouteResponseType } from '../common/types/workspace-route-response.type';
 import { CreateWorkspaceRouteDto } from './dto/create-workspace-route.dto';
 import { UpdateRouteMethodsDto } from './dto/update-route-methods.dto';
 import { UpdateRoutePathDto } from './dto/update-route-path.dto';
+import { UpdateRouteResponseDto } from './dto/update-route-response.dto';
 import { UpdateRouteStatusDto } from './dto/update-route-status.dto';
 import { WorkspaceRoutesService } from './workspace-routes.service';
 
@@ -67,9 +80,9 @@ export class WorkspaceRoutesController {
   updateRoutePath(
     @Param('slug') slug: string,
     @Param('id') id: string,
-    @Body() updateRouteMethodsDto: UpdateRoutePathDto
+    @Body() updateRoutePathDto: UpdateRoutePathDto
   ) {
-    return this.workspaceRoutesService.updateRoutePath(slug, id, updateRouteMethodsDto);
+    return this.workspaceRoutesService.updateRoutePath(slug, id, updateRoutePathDto);
   }
 
   @Patch('update/:id/status')
@@ -79,8 +92,34 @@ export class WorkspaceRoutesController {
   updateRouteStatus(
     @Param('slug') slug: string,
     @Param('id') id: string,
-    @Body() updateRouteMethodsDto: UpdateRouteStatusDto
+    @Body() updateRouteStatusDto: UpdateRouteStatusDto
   ) {
-    return this.workspaceRoutesService.updateRouteStatus(slug, id, updateRouteMethodsDto);
+    return this.workspaceRoutesService.updateRouteStatus(slug, id, updateRouteStatusDto);
+  }
+
+  @Patch('update/:id/response')
+  @UseInterceptors(FileInterceptor('response'))
+  @WorkspaceRoles([Role.Owner, Role.Editor])
+  @GrantWorkspaceExistence()
+  @UseGuards(WorkspaceAccessGuard)
+  updateRouteResponse(
+    @Param('slug') slug: string,
+    @Param('id') id: string,
+    @Body() updateRouteResponseDto: UpdateRouteResponseDto,
+    @UploadedFile() file
+  ) {
+    return this.workspaceRoutesService.updateRouteResponse(slug, id, {
+      ...updateRouteResponseDto,
+      response:
+        updateRouteResponseDto.responseType === WorkspaceRouteResponseType.File ? file : updateRouteResponseDto.response
+    });
+  }
+
+  @Delete(':id')
+  @WorkspaceRoles([Role.Owner, Role.Editor])
+  @GrantWorkspaceExistence()
+  @UseGuards(WorkspaceAccessGuard)
+  deleteRoute(@Param('slug') slug: string, @Param('id') id: string) {
+    return this.workspaceRoutesService.deleteRoute(slug, id);
   }
 }

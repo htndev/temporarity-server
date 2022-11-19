@@ -1,4 +1,4 @@
-import { AuthScope } from './../../constants/auth.constant';
+import { AuthScope } from '../../constants/auth.constant';
 import { Injectable } from '@nestjs/common';
 import * as Joi from 'joi';
 

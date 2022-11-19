@@ -1,4 +1,4 @@
-import { Nullable } from './../../domains/generator/utils/base.type';
+import { Nullable } from '../../domains/generator/utils/base.type';
 import { Boxed } from './base.type';
 
 export enum HttpMethod {
@@ -13,7 +13,6 @@ export enum HttpMethod {
 }
 
 export enum Placeholder {
-  DoubleWildcard = '**',
   Wildcard = '*',
   Param = ':',
   Word = 'word'

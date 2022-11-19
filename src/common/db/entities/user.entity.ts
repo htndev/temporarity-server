@@ -1,7 +1,7 @@
 import { compare, hash } from 'bcrypt';
 import { BeforeInsert, Column, Entity, Index } from 'typeorm';
 import { SALT_ROUNDS } from '../../constants/security.constant';
-import { Nullable } from './../../types/base.type';
+import { Nullable } from '../../types/base.type';
 import { BaseEntity } from './base.entity';
 
 @Entity({ name: 'users', synchronize: true })

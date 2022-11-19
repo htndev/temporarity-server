@@ -5,13 +5,13 @@ import * as https from 'https';
 import { WorkspaceRouteResponseType } from 'src/common/types/workspace-route-response.type';
 import { Readable } from 'stream';
 import { GeneratorProvider } from '../common/providers/generator.provider';
-import { RANDOM_IMAGE_SIZES } from './../common/constants/routes.constant';
-import { WorkspaceRoute } from './../common/db/entities/workspace-route.entity';
-import { WorkspaceRouteResponseRepository } from './../common/db/repositories/workspace-route-response.repository';
-import { WorkspaceRouteRepository } from './../common/db/repositories/workspace-route.repository';
-import { WorkspaceRepository } from './../common/db/repositories/workspace.repository';
-import { HttpMethod } from './../common/types/workspace-route.type';
-import { redirect } from './../common/utils/redirect.util';
+import { RANDOM_IMAGE_SIZES } from '../common/constants/routes.constant';
+import { WorkspaceRoute } from '../common/db/entities/workspace-route.entity';
+import { WorkspaceRouteResponseRepository } from '../common/db/repositories/workspace-route-response.repository';
+import { WorkspaceRouteRepository } from '../common/db/repositories/workspace-route.repository';
+import { WorkspaceRepository } from '../common/db/repositories/workspace.repository';
+import { HttpMethod } from '../common/types/workspace-route.type';
+import { redirect } from '../common/utils/redirect.util';
 
 @Injectable()
 export class RoutesService {
@@ -43,20 +43,34 @@ export class RoutesService {
   }) {
     const workspace = await this.workspaceRepository.getWorkspaceBySlug(slug);
     const incomingRoute = request.params[0];
-    const route = await this.workspaceRouteRepository.getRouteByPath(workspace.id, incomingRoute);
+    const routes = await this.workspaceRouteRepository.getRouteByPath(workspace.id, incomingRoute, [
+      method,
+      HttpMethod.ALL
+    ]);
 
-    if (!route) {
+    if (!routes) {
       return this.notFoundError(incomingRoute, method);
     }
 
-    if (!route.methods.includes(method) && !route.methods.includes(HttpMethod.ALL)) {
-      return this.notFoundError(incomingRoute, method);
+    const [routeA, routeB] = routes;
+
+    if (routeA && !routeB) {
+      return this.buildResponse(routeA, response);
     }
 
-    return this.buildResponse(route, response);
+    if (routeA.methods.includes(HttpMethod.ALL) && routeB) {
+      return this.buildResponse(routeB, response);
+    }
+
+    if (routeB.methods.includes(HttpMethod.ALL) && routeA) {
+      return this.buildResponse(routeA, response);
+    }
+
+    return this.buildResponse(routeA, response);
   }
 
   private async buildResponse(route: WorkspaceRoute, response: Response) {
+    // @ts-ignore
     const workspaceResponse = await this.workspaceRouteResponseRepository.findOne({ where: { routeId: route.id } });
     response.status(route.status);
 

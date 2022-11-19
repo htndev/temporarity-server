@@ -10,11 +10,11 @@ import { Reflector } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Role } from '../constants/role.constant';
 import { UserRepository } from '../db/repositories/user.repository';
-import { WorkspaceMembershipRepository } from './../db/repositories/workspace-membership.repository';
-import { WorkspaceRoleRepository } from './../db/repositories/workspace-role.repository';
-import { WorkspaceRepository } from './../db/repositories/workspace.repository';
-import { WORKSPACE_ROLES_DECORATOR_KEY } from './../decorators/workspace-roles.decorator';
-import { SafeUser } from './../types/auth.type';
+import { WorkspaceMembershipRepository } from '../db/repositories/workspace-membership.repository';
+import { WorkspaceRoleRepository } from '../db/repositories/workspace-role.repository';
+import { WorkspaceRepository } from '../db/repositories/workspace.repository';
+import { WORKSPACE_ROLES_DECORATOR_KEY } from '../decorators/workspace-roles.decorator';
+import { SafeUser } from '../types/auth.type';
 
 @Injectable()
 export class WorkspaceAccessGuard implements CanActivate {
@@ -48,7 +48,7 @@ export class WorkspaceAccessGuard implements CanActivate {
       throw new UnauthorizedException('Missing user');
     }
 
-    const userId = await this.userRepository.getId({ email: user.email });
+    const userId = await this.userRepository.retrieveId({ email: user.email });
     const membership = await this.workspaceMembershipRepository.getUserMembership(workspace.id, userId);
 
     if (!membership) {

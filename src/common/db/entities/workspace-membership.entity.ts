@@ -1,15 +1,14 @@
-import { Column, Entity } from 'typeorm';
-import { ObjectID } from 'mongodb';
+import { Entity, ObjectID, ObjectIdColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
 
 @Entity({ name: 'workspace_membership', synchronize: true })
 export class WorkspaceMembership extends BaseEntity {
-  @Column()
-  workspaceId: ObjectID;
+  @ObjectIdColumn()
+  workspaceId: ObjectID | string;
 
-  @Column()
-  userId: ObjectID;
+  @ObjectIdColumn()
+  userId: ObjectID | string;
 
-  @Column()
-  role: ObjectID;
+  @ObjectIdColumn()
+  role: ObjectID | string;
 }

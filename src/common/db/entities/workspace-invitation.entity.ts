@@ -1,5 +1,4 @@
-import { ObjectID } from 'mongodb';
-import { Column, Entity, Index } from 'typeorm';
+import { Column, Entity, Index, ObjectID, ObjectIdColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
 
 @Entity({ name: 'workspace_invitations' })
@@ -8,9 +7,9 @@ export class WorkspaceInvitation extends BaseEntity {
   @Index()
   inviteCode: string;
 
-  @Column()
-  userId: ObjectID;
+  @ObjectIdColumn()
+  userId: ObjectID | string;
 
-  @Column()
-  workspaceId: ObjectID;
+  @ObjectIdColumn()
+  workspaceId: ObjectID | string;
 }

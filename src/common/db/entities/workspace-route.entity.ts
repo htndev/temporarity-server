@@ -1,12 +1,11 @@
-import { Column, Entity, Index } from 'typeorm';
-import { ObjectID } from 'mongodb';
+import { Column, Entity, Index, ObjectID, ObjectIdColumn } from 'typeorm';
+import { HttpMethod } from './../../types/workspace-route.type';
 import { BaseEntity } from './base.entity';
 
 @Entity({ name: 'workspace_routes' })
 export class WorkspaceRoute extends BaseEntity {
-  @Column()
-  @Index()
-  workspaceId: ObjectID;
+  @ObjectIdColumn()
+  workspaceId: ObjectID | string;
 
   @Column()
   @Index()
@@ -17,7 +16,7 @@ export class WorkspaceRoute extends BaseEntity {
   pathPattern: RegExp;
 
   @Column({ type: 'array' })
-  methods: ObjectID[];
+  methods: HttpMethod[];
 
   @Column()
   status: number;

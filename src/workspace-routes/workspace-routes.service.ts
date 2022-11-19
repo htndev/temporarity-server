@@ -1,23 +1,24 @@
-import { WorkspaceRoute } from './../common/db/entities/workspace-route.entity';
-import { ObjectID } from 'mongodb';
-import { BadRequestException, ConflictException, HttpStatus, Injectable } from '@nestjs/common';
-// import { fromBuffer } from 'file-type';
+import { BadRequestException, ConflictException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectS3, S3 } from 'nestjs-s3';
+import { ObjectID } from 'typeorm';
 import { v4 } from 'uuid';
-import { ALLOWED_HTTP_METHODS } from './../common/constants/routes.constant';
-import { WorkspaceRouteRequestRepository } from './../common/db/repositories/workspace-route-request.repository';
-import { WorkspaceRouteResponseRepository } from './../common/db/repositories/workspace-route-response.repository';
-import { WorkspaceRouteRepository } from './../common/db/repositories/workspace-route.repository';
-import { WorkspaceRepository } from './../common/db/repositories/workspace.repository';
-import { SecurityConfig } from './../common/providers/config/security.config';
-import { HttpResponse } from './../common/types/response.type';
-import { WorkspaceRouteResponseType } from './../common/types/workspace-route-response.type';
-import { RouteResponseType, HttpMethod } from './../common/types/workspace-route.type';
-import { buildRoutePath, buildRoutePattern } from './../common/utils/workspace-routes.util';
+import { ALLOWED_HTTP_METHODS } from '../common/constants/routes.constant';
+import { WorkspaceRoute } from '../common/db/entities/workspace-route.entity';
+import { WorkspaceRouteRequestRepository } from '../common/db/repositories/workspace-route-request.repository';
+import { WorkspaceRouteResponseRepository } from '../common/db/repositories/workspace-route-response.repository';
+import { WorkspaceRouteRepository } from '../common/db/repositories/workspace-route.repository';
+import { WorkspaceRepository } from '../common/db/repositories/workspace.repository';
+import { SecurityConfig } from '../common/providers/config/security.config';
+import { HttpResponse } from '../common/types/response.type';
+import { WorkspaceRouteResponseType } from '../common/types/workspace-route-response.type';
+import { HttpMethod, RouteResponseType } from '../common/types/workspace-route.type';
+import { buildRoutePath, buildRoutePattern } from '../common/utils/workspace-routes.util';
+import { Placeholder } from './../common/types/workspace-route.type';
 import { CreateWorkspaceRouteDto } from './dto/create-workspace-route.dto';
-import { UpdateRoutePathDto } from './dto/update-route-path.dto';
-import { UpdateRouteStatusDto } from './dto/update-route-status.dto';
 import { UpdateRouteMethodsDto } from './dto/update-route-methods.dto';
+import { UpdateRoutePathDto } from './dto/update-route-path.dto';
+import { UpdateRouteResponseDto } from './dto/update-route-response.dto';
+import { UpdateRouteStatusDto } from './dto/update-route-status.dto';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const mime = require('mime-types');
 
@@ -51,15 +52,30 @@ export class WorkspaceRoutesService {
       throw new BadRequestException('Invalid HTTP methods provided.');
     }
 
+    if (createWorkspaceRouteDto.path.includes(Placeholder.Wildcard)) {
+      const startsWithWildcardRegExp = /^\/\*\//;
+      const endsWithWildcardRegExp = /\/\*$/;
+      const singleWildcardRegExp = /\/\/*\//;
+      const path = buildRoutePath(createWorkspaceRouteDto.path);
+
+      if (
+        [startsWithWildcardRegExp, endsWithWildcardRegExp, singleWildcardRegExp].some((regExp) => regExp.test(path))
+      ) {
+        throw new BadRequestException("Invalid path provided. Wildcard placeholder couldn't be used in single way.");
+      }
+    }
+
     const workspace = await this.workspaceRepository.getWorkspaceBySlug(slug);
 
-    const similarRoute = await this.workspaceRouteRepository.sameRouteExists(
+    const similarRoutes = await this.workspaceRouteRepository.getRouteByPath(
       workspace.id,
       buildRoutePath(createWorkspaceRouteDto.path),
       createWorkspaceRouteDto.methods
     );
 
-    if (similarRoute) {
+    if (similarRoutes) {
+      const [similarRoute] = similarRoutes;
+
       throw new ConflictException(
         `Route '${createWorkspaceRouteDto.path}' is conflicting with '${similarRoute.path}' route.`
       );
@@ -106,6 +122,7 @@ export class WorkspaceRoutesService {
   async getRouteDetails(slug: string, id: string) {
     const workspace = await this.workspaceRepository.getWorkspaceBySlug(slug);
     const route = await this.workspaceRouteRepository.getRoute(workspace.id, id);
+    // @ts-ignore
     const response = await this.workspaceRouteResponseRepository.findOne({ where: { routeId: route.id } });
 
     return {
@@ -149,20 +166,27 @@ export class WorkspaceRoutesService {
     const workspace = await this.workspaceRepository.getWorkspaceBySlug(slug);
     const route = await this.workspaceRouteRepository.getRoute(workspace.id, id);
 
-    const conflictingRoute = await this.workspaceRouteRepository.getRouteByPath(
+    const conflictingRoutes = await this.workspaceRouteRepository.getRouteByPath(
       workspace.id,
-      buildRoutePath(updateRoutePathDto.path)
+      buildRoutePath(updateRoutePathDto.path),
+      route.methods
     );
 
-    if (conflictingRoute && conflictingRoute.methods.some((method) => route.methods.includes(method))) {
-      const conflictingMethods = conflictingRoute.methods.filter((method) => route.methods.includes(method));
-      throw new ConflictException(
-        `Route '${updateRoutePathDto.path}' is conflicting with '${
-          conflictingRoute.path
-        }' route. They have conflicted ${conflictingMethods.join(', ')} ${
-          conflictingMethods.length === 1 ? 'method' : 'methods'
-        }.`
-      );
+    const hasConflictingRoute = conflictingRoutes !== null;
+
+    if (hasConflictingRoute) {
+      const [conflictingRoute] = conflictingRoutes;
+
+      if (conflictingRoute && conflictingRoute.methods.some((method) => route.methods.includes(method))) {
+        const conflictingMethods = conflictingRoute.methods.filter((method) => route.methods.includes(method));
+        throw new ConflictException(
+          `Route '${updateRoutePathDto.path}' is conflicting with '${
+            conflictingRoute.path
+          }' route. They have conflicted ${conflictingMethods.join(', ')} ${
+            conflictingMethods.length === 1 ? 'method' : 'methods'
+          }.`
+        );
+      }
     }
 
     route.path = buildRoutePath(updateRoutePathDto.path);
@@ -190,8 +214,70 @@ export class WorkspaceRoutesService {
     };
   }
 
+  async updateRouteResponse(slug: string, id: string, updateRouteResponseDto: UpdateRouteResponseDto) {
+    const workspace = await this.workspaceRepository.getWorkspaceBySlug(slug);
+    const route = await this.workspaceRouteRepository.getRoute(workspace.id, id);
+
+    if (updateRouteResponseDto.responseType === WorkspaceRouteResponseType.File) {
+      const possibleBuffer: Buffer = (updateRouteResponseDto.response as any)?.buffer;
+      if (possibleBuffer instanceof Buffer) {
+        const contentType = (updateRouteResponseDto.response as any).mimetype;
+        const ext = mime.extension(contentType);
+        const key = v4();
+        const path = `${this.securityConfig.s3BucketFolder}/${key}.${ext}`;
+        const { Location: url } = await this.s3Client
+          .upload({
+            Bucket: this.securityConfig.s3BucketName,
+            ACL: 'public-read',
+            Body: possibleBuffer,
+            Key: path
+          })
+          .promise();
+        updateRouteResponseDto.response = url;
+      }
+    }
+    // @ts-ignore
+    const response = await this.workspaceRouteResponseRepository.findOne({ where: { routeId: route.id } });
+
+    response.responseType = updateRouteResponseDto.responseType;
+    response.schema = updateRouteResponseDto.response as any;
+
+    await response.save();
+
+    return {
+      status: HttpStatus.OK,
+      message: 'Route response updated successfully'
+    };
+  }
+
+  async deleteRoute(slug: string, routeId: string) {
+    const workspace = await this.workspaceRepository.getWorkspaceBySlug(slug);
+    const route = await this.workspaceRouteRepository.getRoute(workspace.id, routeId);
+
+    if (!route) {
+      throw new NotFoundException('Route not found');
+    }
+
+    // @ts-ignore
+    const routeRequest = await this.workspaceRouteRequestRepository.findOne({ where: { routeId: route.id } });
+    // @ts-ignore
+    const routeResponseHeaders = await this.workspaceRouteRequestRepository.find({ where: { routeId: route.id } });
+    // @ts-ignore
+    const routeResponse = await this.workspaceRouteResponseRepository.findOne({ where: { routeId: route.id } });
+
+    await routeResponse.remove();
+    await routeRequest.remove();
+    await Promise.all(routeResponseHeaders.map(async (header) => await header.remove()));
+    await route.remove();
+
+    return {
+      status: HttpStatus.OK,
+      message: 'Route deleted successfully'
+    };
+  }
+
   private async getConflictingRoute(
-    workspaceId: ObjectID,
+    workspaceId: ObjectID | string,
     route: WorkspaceRoute,
     methods: HttpMethod[]
   ): Promise<WorkspaceRoute | null> {

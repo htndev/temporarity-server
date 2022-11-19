@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { WorkspaceRouteResponse } from './../entities/workspace-route-response.entity';
+import { WorkspaceRouteResponse } from '../entities/workspace-route-response.entity';
 import { BaseRepository } from './base.repository';
 
 @Injectable()

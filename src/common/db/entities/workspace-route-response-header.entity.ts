@@ -1,11 +1,10 @@
-import { ObjectID } from 'mongodb';
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, ObjectID, ObjectIdColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
 
 @Entity({ name: 'workspace_route_response_headers' })
 export class WorkspaceRouteResponseHeader extends BaseEntity {
-  @Column()
-  routeRequestId: ObjectID;
+  @ObjectIdColumn()
+  routeRequestId: ObjectID | string;
 
   @Column()
   header: string;

@@ -2,12 +2,12 @@ import { Body, Controller, Get, HttpStatus, Post, Req, Res, UseGuards } from '@n
 import { AuthGuard } from '@nestjs/passport';
 import { Request, Response } from 'express';
 import { OAuthProviderData } from '../common/types/auth.type';
-import { AuthScope } from './../common/constants/auth.constant';
-import { Cookies } from './../common/decorators/cookies.decorator';
-import { User } from './../common/decorators/user.decorator';
-import { JwtAccessTokenGuard } from './../common/guards/jwt-access-token.guard';
-import { SafeUser } from './../common/types/auth.type';
-import { CookiesType } from './../common/types/base.type';
+import { AuthScope } from '../common/constants/auth.constant';
+import { Cookies } from '../common/decorators/cookies.decorator';
+import { User } from '../common/decorators/user.decorator';
+import { JwtAccessTokenGuard } from '../common/guards/jwt-access-token.guard';
+import { SafeUser } from '../common/types/auth.type';
+import { CookiesType } from '../common/types/base.type';
 import { AuthService } from './auth.service';
 import { CredentialsSignInDto } from './dto/signin.dto';
 import { CredentialsSignUpDto } from './dto/signup.dto';

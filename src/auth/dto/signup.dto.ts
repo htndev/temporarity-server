@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, Length, Matches } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, Length, Matches } from 'class-validator';
 
 export class CredentialsSignUpDto {
   @IsNotEmpty()
@@ -16,4 +16,7 @@ export class CredentialsSignUpDto {
       `Password should be at least 8 symbols, should not exceed 255 symbols, include at least one digit and special symbol, but received ${value}`
   })
   password: string;
+
+  @IsString()
+  language: string;
 }

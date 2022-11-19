@@ -1,5 +1,5 @@
 import { User } from '../db/entities/user.entity';
-import { AuthScope } from './../constants/auth.constant';
+import { AuthScope } from '../constants/auth.constant';
 
 export interface OAuthProviderData {
   provider: AuthScope;

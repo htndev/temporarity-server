@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { ObjectID } from 'mongodb';
-import { AuthScope } from './../../constants/auth.constant';
-import { SafeUser } from './../../types/auth.type';
-import { Nullable } from './../../types/base.type';
-import { IdentityProvider } from './../entities/identity-provider.entity';
-import { User } from './../entities/user.entity';
+import { ObjectID } from 'typeorm';
+import { AuthScope } from '../../constants/auth.constant';
+import { SafeUser } from '../../types/auth.type';
+import { Nullable } from '../../types/base.type';
+import { IdentityProvider } from '../entities/identity-provider.entity';
+import { User } from '../entities/user.entity';
 import { BaseRepository } from './base.repository';
 
 @Injectable()
@@ -45,7 +45,8 @@ export class UserRepository extends BaseRepository<User> {
   }
 
   async safeFindUsers(ids: (string | ObjectID)[]): Promise<SafeUser[]> {
-    const users = await this.findByIds(ids);
+    // @ts-ignore
+    const users = await this.findBy({ id: { $in: ids } });
 
     return users.map(this.mapSecureFields);
   }

@@ -3,9 +3,9 @@ import { HttpService } from '@nestjs/axios';
 import { PassportStrategy } from '@nestjs/passport';
 import { Profile, Strategy } from 'passport-facebook';
 import { map } from 'rxjs';
-import { AuthScope, CALLBACK_PATH } from './../common/constants/auth.constant';
-import { AppConfig } from './../common/providers/config/app.config';
-import { SecurityConfig } from './../common/providers/config/security.config';
+import { AuthScope, CALLBACK_PATH } from '../common/constants/auth.constant';
+import { AppConfig } from '../common/providers/config/app.config';
+import { SecurityConfig } from '../common/providers/config/security.config';
 import { OAuthProviderData } from '../common/types/auth.type';
 
 export class FacebookStrategy extends PassportStrategy(Strategy, AuthScope.Facebook) {

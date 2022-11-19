@@ -1,90 +1,70 @@
 import { Injectable } from '@nestjs/common';
-import { ObjectID } from 'mongodb';
+import { ObjectID } from 'typeorm';
 import { Route } from '../../../workspace-routes/entities/route.entity';
 import { URLLayer } from '../../entities/url-layer.entity';
 import { Nullable } from '../../types/base.type';
 import { WorkspaceRouteResponseType } from '../../types/workspace-route-response.type';
 import { HttpMethod } from '../../types/workspace-route.type';
-import { buildRoutePath, buildRoutePattern, getSuitableRoute } from '../../utils/workspace-routes.util';
+import { buildRoutePath, buildRoutePattern, isSuitableRoute } from '../../utils/workspace-routes.util';
 import { WorkspaceRouteRequest } from '../entities/workspace-route-request.entity';
 import { WorkspaceRouteResponse } from '../entities/workspace-route-response.entity';
 import { WorkspaceRoute } from '../entities/workspace-route.entity';
+import { Boxed } from './../../../domains/generator/utils/base.type';
 import { BaseRepository } from './base.repository';
 
 @Injectable()
 export class WorkspaceRouteRepository extends BaseRepository<WorkspaceRoute> {
-  async getRouteByPath(workspaceId: ObjectID, path: string): Promise<WorkspaceRoute | null> {
-    const routes = await this.findWorkspaceRoutes(workspaceId, path);
+  async getRouteByPath(
+    workspaceId: ObjectID | string,
+    path: string,
+    methodsOrMethod: Boxed<HttpMethod>
+  ): Promise<Nullable<WorkspaceRoute[]>> {
+    const routes = await this.find({
+      where: {
+        workspaceId,
+        methods: {
+          // @ts-ignore
+          $in: [...new Set([...(Array.isArray(methodsOrMethod) ? methodsOrMethod : [methodsOrMethod])])]
+        }
+      }
+    }).then((routes) => routes.filter((route) => route.pathPattern.test(`/${path}`)));
 
     if (!routes.length) {
       return null;
     }
 
     if (routes.length === 1) {
-      const suitable = getSuitableRoute(new URLLayer(path), new URLLayer(routes[0].path), new URLLayer(path));
-      return suitable.path === path ? null : routes[0];
+      const [route] = routes;
+
+      return isSuitableRoute(new URLLayer(route.path), new URLLayer(path)) ? [route] : null;
     }
 
+    const routesLayers = routes.map((route) => new URLLayer(route.path));
     const incomingRouteLayer = new URLLayer(path);
 
-    const theMostSuitableLayer = routes
-      .map((route) => new URLLayer(route.path))
-      .reduce((best, current) => getSuitableRoute(best, current, incomingRouteLayer));
+    const theMostSuitableLayers = routesLayers.filter((route: any) => isSuitableRoute(route, incomingRouteLayer));
+    const maxValue = Math.max(...theMostSuitableLayers.map((layer) => layer.value));
+    const routesWithMaxValue = theMostSuitableLayers
+      .filter((layer) => layer.value === maxValue)
+      .map((layer) => routes.find((route) => route.path === layer.path));
 
-    return routes.find((route) => route.path === theMostSuitableLayer.path);
+    return routesWithMaxValue;
   }
 
-  async getRouteByPathByMethods(workspaceId: ObjectID, path: string): Promise<WorkspaceRoute | null> {
-    const routes = await this.findWorkspaceRoutes(workspaceId, path);
-
-    if (!routes.length) {
-      return null;
-    }
-
-    if (routes.length === 1) {
-      const suitable = getSuitableRoute(new URLLayer(path), new URLLayer(routes[0].path), new URLLayer(path));
-      return suitable.path === path ? null : routes[0];
-    }
-
-    const incomingRouteLayer = new URLLayer(path);
-
-    const theMostSuitableLayer = routes
-      .map((route) => new URLLayer(route.path))
-      .reduce((best, current) => getSuitableRoute(best, current, incomingRouteLayer));
-
-    return routes.find((route) => route.path === theMostSuitableLayer.path);
-  }
-
-  async sameRouteExists(workspaceId: ObjectID, path: string, methods: HttpMethod[]): Promise<WorkspaceRoute | false> {
-    const route = await this.getRouteByPath(workspaceId, path);
-
-    if (!route) {
-      return false;
-    }
-
-    if (methods.every((method) => !route.methods.includes(method))) {
-      return null;
-    }
-
-    const suitableRoute = getSuitableRoute(new URLLayer(path), new URLLayer(route.path), new URLLayer(path));
-
-    return suitableRoute.path === route.path ? route : false;
-  }
-
-  async findWorkspaceRoutes(workspaceId: ObjectID, path: string): Promise<WorkspaceRoute[]> {
+  async findWorkspaceRoutes(workspaceId: ObjectID | string, path: string): Promise<WorkspaceRoute[]> {
     const routes = await this.find({ where: { workspaceId } });
 
     return routes.filter((route) => route.pathPattern.test(`/${path}`)) || null;
   }
 
-  async getRoutes(workspaceId: ObjectID): Promise<Route[]> {
+  async getRoutes(workspaceId: ObjectID | string): Promise<Route[]> {
     return this.find({ where: { workspaceId } }).then((routes) =>
       routes.map((route) => new Route(route.id, route.path, route.methods, route.status))
     );
   }
 
   async createRoute(
-    workspaceId: ObjectID,
+    workspaceId: ObjectID | string,
     path: string,
     methods: HttpMethod[],
     status: number,
@@ -114,9 +94,8 @@ export class WorkspaceRouteRepository extends BaseRepository<WorkspaceRoute> {
     return workspaceRoute;
   }
 
-  async getRoute(workspaceId: ObjectID, id: string): Promise<WorkspaceRoute | null> {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    return this.findOne({ where: { _id: ObjectID(id), workspaceId } });
+  async getRoute(workspaceId: ObjectID | string, id: ObjectID | string): Promise<WorkspaceRoute | null> {
+    // ! TypeORM has an issue with field _id in search. Field id is working in the wrong way
+    return this.findOne({ where: { id, workspaceId } });
   }
 }

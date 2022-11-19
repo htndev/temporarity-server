@@ -1,10 +1,10 @@
 import { Inject } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Profile, Strategy } from 'passport-github';
-import { AuthScope, CALLBACK_PATH } from './../common/constants/auth.constant';
-import { AppConfig } from './../common/providers/config/app.config';
-import { SecurityConfig } from './../common/providers/config/security.config';
-import { OAuthProviderData } from './../common/types/auth.type';
+import { AuthScope, CALLBACK_PATH } from '../common/constants/auth.constant';
+import { AppConfig } from '../common/providers/config/app.config';
+import { SecurityConfig } from '../common/providers/config/security.config';
+import { OAuthProviderData } from '../common/types/auth.type';
 
 export class GithubStrategy extends PassportStrategy(Strategy, AuthScope.Github) {
   constructor(

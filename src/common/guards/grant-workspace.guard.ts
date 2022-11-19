@@ -1,5 +1,5 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { WorkspaceRepository } from './../db/repositories/workspace.repository';
+import { WorkspaceRepository } from '../db/repositories/workspace.repository';
 
 @Injectable()
 export class GrantWorkspaceGuard implements CanActivate {

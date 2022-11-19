@@ -8,17 +8,14 @@ interface URLSchema {
 }
 
 const PLACEHOLDER_VALUE = {
-  [Placeholder.DoubleWildcard]: 1,
-  [Placeholder.Wildcard]: 10,
-  [Placeholder.Param]: 100,
+  [Placeholder.Param]: 10,
+  [Placeholder.Wildcard]: 100,
   [Placeholder.Word]: 1000
 };
 
 const getValue = (value: string) => {
   switch (true) {
-    case value === '**':
-      return PLACEHOLDER_VALUE[Placeholder.DoubleWildcard];
-    case value === '*':
+    case value.includes('*'):
       return PLACEHOLDER_VALUE[Placeholder.Wildcard];
     case value.startsWith(':'):
       return PLACEHOLDER_VALUE[Placeholder.Param];
@@ -29,8 +26,6 @@ const getValue = (value: string) => {
 
 const getTypeByValue = (value: number) => {
   switch (value) {
-    case PLACEHOLDER_VALUE['**']:
-      return '**';
     case PLACEHOLDER_VALUE['*']:
       return '*';
     case PLACEHOLDER_VALUE[':']:

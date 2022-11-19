@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { IdentityProvider } from '../entities/identity-provider.entity';
-import { User } from './../entities/user.entity';
+import { User } from '../entities/user.entity';
 import { BaseRepository } from './base.repository';
 
 @Injectable()

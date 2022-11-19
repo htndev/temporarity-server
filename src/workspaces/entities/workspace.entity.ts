@@ -1,5 +1,5 @@
-import { Role } from './../../common/constants/role.constant';
-import { Nullable } from './../../common/types/base.type';
+import { Role } from '../../common/constants/role.constant';
+import { Nullable } from '../../common/types/base.type';
 
 export class Workspace {
   constructor(

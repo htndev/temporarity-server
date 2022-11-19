@@ -1,12 +1,11 @@
-import { WorkspaceRouteRequestFieldType } from './../../types/workspace-route-request.type';
-import { ObjectID } from 'mongodb';
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, ObjectID, ObjectIdColumn } from 'typeorm';
+import { WorkspaceRouteRequestFieldType } from '../../types/workspace-route-request.type';
 import { BaseEntity } from './base.entity';
 
 @Entity({ name: 'workspace_route_request_fields' })
 export class WorkspaceRouteRequestField extends BaseEntity {
-  @Column()
-  routeRequestId: ObjectID;
+  @ObjectIdColumn()
+  routeRequestId: ObjectID | string;
 
   @Column()
   field: string;

@@ -1,7 +1,7 @@
 import { provideCustomRepository } from 'src/common/utils/db.util';
 import { User } from './db/entities/user.entity';
-import { JwtRefreshTokenStrategy } from './../strategies/jwt-refresh.strategy';
-import { JwtAccessTokenStrategy } from './../strategies/jwt-access.strategy';
+import { JwtRefreshTokenStrategy } from '../strategies/jwt-refresh.strategy';
+import { JwtAccessTokenStrategy } from '../strategies/jwt-access.strategy';
 import { UserRepository } from './db/repositories/user.repository';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Module } from '@nestjs/common';

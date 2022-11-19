@@ -1,23 +1,23 @@
 import { BadRequestException, ConflictException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { Response } from 'express';
-import { ObjectID } from 'mongodb';
-import { In } from 'typeorm';
+import { ObjectId } from 'mongodb';
+import { In, ObjectID } from 'typeorm';
+import { EMAIL_INVITATION_TEMPLATE } from '../common/constants/email.constant';
 import { Role } from '../common/constants/role.constant';
-import { EMAIL_INVITATION_TEMPLATE } from './../common/constants/email.constant';
-import { Workspace as WorkspaceEntity } from './../common/db/entities/workspace.entity';
-import { UserRepository } from './../common/db/repositories/user.repository';
-import { WorkspaceInvitationRepository } from './../common/db/repositories/workspace-invitation.repository';
-import { WorkspaceMembershipRepository } from './../common/db/repositories/workspace-membership.repository';
-import { WorkspaceRoleRepository } from './../common/db/repositories/workspace-role.repository';
-import { WorkspaceRepository } from './../common/db/repositories/workspace.repository';
-import { AppConfig } from './../common/providers/config/app.config';
-import { EmailService } from './../common/providers/email/email.service';
-import { SecurityProvider } from './../common/providers/security/security.service';
-import { SafeUser } from './../common/types/auth.type';
-import { HttpResponse } from './../common/types/response.type';
-import { WorkspaceMember, WorkspaceWithDetails } from './../common/types/workspace.type';
-import { SafeWorkspace } from './../common/types/workspaces.type';
-import { redirect } from './../common/utils/redirect.util';
+import { Workspace as WorkspaceEntity } from '../common/db/entities/workspace.entity';
+import { UserRepository } from '../common/db/repositories/user.repository';
+import { WorkspaceInvitationRepository } from '../common/db/repositories/workspace-invitation.repository';
+import { WorkspaceMembershipRepository } from '../common/db/repositories/workspace-membership.repository';
+import { WorkspaceRoleRepository } from '../common/db/repositories/workspace-role.repository';
+import { WorkspaceRepository } from '../common/db/repositories/workspace.repository';
+import { AppConfig } from '../common/providers/config/app.config';
+import { EmailService } from '../common/providers/email/email.service';
+import { SecurityProvider } from '../common/providers/security/security.service';
+import { SafeUser } from '../common/types/auth.type';
+import { HttpResponse } from '../common/types/response.type';
+import { WorkspaceMember, WorkspaceWithDetails } from '../common/types/workspace.type';
+import { SafeWorkspace } from '../common/types/workspaces.type';
+import { redirect } from '../common/utils/redirect.util';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { ExcludeUserFromWorkspaceDto } from './dto/exclude-user-from-workspace.dto';
 import { InviteUsersDto } from './dto/invite-users.dto';
@@ -43,7 +43,7 @@ export class WorkspacesService {
       throw new ConflictException('Workspace with this slug already exists');
     }
 
-    const userId = await this.userRepository.getId({ email: user.email });
+    const userId = await this.userRepository.retrieveId({ email: user.email });
 
     const workspace = await this.workspaceRepository.create({
       name,
@@ -68,8 +68,9 @@ export class WorkspacesService {
   }
 
   async findAll(user: SafeUser): Promise<HttpResponse<{ workspaces: Workspace[] }>> {
-    const userId = await this.userRepository.getId({ email: user.email });
+    const userId = await this.userRepository.retrieveId({ email: user.email });
     const userMemberships = await this.workspaceMembershipRepository.find({ where: { userId: userId } });
+    console.log(userMemberships);
     const workspaces = await Promise.all(
       userMemberships.map(async (membership) => {
         const workspace = await this.workspaceRepository.getShortInformation(membership.workspaceId);
@@ -133,7 +134,7 @@ export class WorkspacesService {
       throw new BadRequestException('No emails provided');
     }
 
-    const userId = await this.userRepository.getId({ email: currentUser.email });
+    const userId = await this.userRepository.retrieveId({ email: currentUser.email });
     const workspace = await this.workspaceRepository.getWorkspaceBySlug(slug);
     const role = await this.getRole(workspace.id, userId);
 
@@ -196,7 +197,7 @@ export class WorkspacesService {
   async excludeMember(slug: string, excludeUserFromWorkspaceDto: ExcludeUserFromWorkspaceDto): Promise<HttpResponse> {
     const workspace = await this.workspaceRepository.getWorkspaceBySlug(slug);
 
-    const userId = await this.userRepository.getId({ email: excludeUserFromWorkspaceDto.email });
+    const userId = await this.userRepository.retrieveId({ email: excludeUserFromWorkspaceDto.email });
 
     if (!userId) {
       throw new NotFoundException(
@@ -227,6 +228,7 @@ export class WorkspacesService {
 
     const workspaceInvitation = await this.workspaceInvitationRepository.findOne({
       where: {
+        // @ts-ignore
         workspaceId: workspace.id,
         inviteCode
       }
@@ -236,6 +238,7 @@ export class WorkspacesService {
       throw new NotFoundException('Invitation is not found');
     }
 
+    // @ts-ignore
     const user = await this.userRepository.findOne(workspaceInvitation.userId);
 
     const newMembership = this.workspaceMembershipRepository.create({
@@ -263,9 +266,9 @@ export class WorkspacesService {
 
     const usersWithRoles = await Promise.all(
       workspaceUsers.map(async (wu) => {
-        const userId = await this.userRepository.getId({ email: wu.email });
+        const userId = await this.userRepository.retrieveId({ email: wu.email });
         const record = await this.workspaceMembershipRepository.getUserMembership(workspace.id, userId);
-        const role = await this.workspaceRoleRepository.findOne(record.role);
+        const role = await this.workspaceRoleRepository.findOne({ where: { id: record.role } });
 
         return {
           ...wu,
@@ -277,10 +280,10 @@ export class WorkspacesService {
     return usersWithRoles;
   }
 
-  private async getRole(workspaceId: ObjectID, userId: ObjectID) {
+  private async getRole(workspaceId: ObjectID | string, userId: ObjectID | string) {
     const membership = await this.workspaceMembershipRepository.getUserMembership(workspaceId, userId);
 
-    return await this.workspaceRoleRepository.findOne(membership.role);
+    return await this.workspaceRoleRepository.findOne({ where: { id: membership.role } });
   }
 
   private async canAccessWorkspace(slug: string, userEmail: string): Promise<boolean> {

@@ -1,4 +1,4 @@
-import { HttpMethod } from './../types/workspace-route.type';
+import { HttpMethod } from '../types/workspace-route.type';
 
 export const ALLOWED_HTTP_METHODS = [
   HttpMethod.GET,

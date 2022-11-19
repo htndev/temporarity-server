@@ -5,8 +5,8 @@ import { BaseRepository } from './base.repository';
 
 @Injectable()
 export class WorkspaceRepository extends BaseRepository<Workspace> {
-  async getShortInformation(id: ObjectID): Promise<Pick<Workspace, 'id' | 'name' | 'slug' | 'description'>> {
-    const workspace = await this.findOneById(id);
+  async getShortInformation(id: ObjectID | string): Promise<Pick<Workspace, 'id' | 'name' | 'slug' | 'description'>> {
+    const workspace = await this.findOne({ where: { id } });
 
     return {
       id: workspace.id,

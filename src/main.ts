@@ -14,7 +14,14 @@ async function bootstrap() {
   const securityConfig = app.get(SecurityConfig);
 
   app.setGlobalPrefix(appConfig.apiVersion);
-  app.enableCors({ allowedHeaders: appConfig.allowedHeaders, origin: appConfig.allowedDomains, credentials: true });
+  app.enableCors({
+    allowedHeaders: appConfig.allowedHeaders,
+    origin: (origin, callback) => {
+      console.log('Request...');
+      return callback(null, origin);
+    },
+    credentials: true
+  });
   app.use(cookieParser(securityConfig.cookieSecret));
   app.use(helmet());
   app.use(compression());
