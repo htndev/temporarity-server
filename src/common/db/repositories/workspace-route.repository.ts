@@ -1,16 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { ObjectID } from 'typeorm';
 import { Route } from '../../../workspace-routes/entities/route.entity';
-import { URLLayer } from '../../entities/url-layer.entity';
 import { Nullable } from '../../types/base.type';
 import { WorkspaceRouteResponseType } from '../../types/workspace-route-response.type';
 import { HttpMethod } from '../../types/workspace-route.type';
-import { buildRoutePath, buildRoutePattern, isSuitableRoute } from '../../utils/workspace-routes.util';
+import { URLLayer } from '../../utils/url-layer.util';
+import { buildRoutePath, buildRoutePattern } from '../../utils/workspace-routes.util';
 import { WorkspaceRouteRequest } from '../entities/workspace-route-request.entity';
 import { WorkspaceRouteResponse } from '../entities/workspace-route-response.entity';
 import { WorkspaceRoute } from '../entities/workspace-route.entity';
 import { Boxed } from './../../../domains/generator/utils/base.type';
 import { transformObjectId } from './../../utils/db.util';
+import { isSuitableRoute } from './../../utils/routes.util';
 import { BaseRepository } from './base.repository';
 
 @Injectable()

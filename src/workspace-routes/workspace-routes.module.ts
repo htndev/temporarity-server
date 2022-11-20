@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { NestjsFormDataModule } from 'nestjs-form-data';
 import { S3Module } from 'nestjs-s3';
-import { provideCustomRepository } from 'src/common/utils/db.util';
 import { User } from '../common/db/entities/user.entity';
 import { WorkspaceMembership } from '../common/db/entities/workspace-membership.entity';
 import { WorkspaceRole } from '../common/db/entities/workspace-role.entity';
@@ -20,9 +20,9 @@ import { WorkspaceRouteRepository } from '../common/db/repositories/workspace-ro
 import { WorkspaceRepository } from '../common/db/repositories/workspace.repository';
 import { ConfigModule } from '../common/providers/config/config.module';
 import { SecurityConfig } from '../common/providers/config/security.config';
+import { provideCustomRepository } from '../common/utils/db.util';
 import { WorkspaceRoutesController } from './workspace-routes.controller';
 import { WorkspaceRoutesService } from './workspace-routes.service';
-import { NestjsFormDataModule } from 'nestjs-form-data';
 
 @Module({
   imports: [

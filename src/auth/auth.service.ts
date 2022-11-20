@@ -65,7 +65,6 @@ export class AuthService {
 
   async credentialsSignIn({ email, password }: CredentialsSignInDto, response: Response): Promise<TokenResponse> {
     const user = await this.userRepository.findOne({ where: { email } });
-    console.log(user);
 
     if (!user) {
       this.throwWrongEmailOrPassword();

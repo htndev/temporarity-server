@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Post, Res, UseGuards } from '@nestjs/common';
 import { Response } from 'express';
-import { GrantWorkspaceExistence } from 'src/common/decorators/grant-workspace-existence.decorator';
 import { Role } from '../common/constants/role.constant';
+import { GrantWorkspaceExistence } from '../common/decorators/grant-workspace-existence.decorator';
 import { Public } from '../common/decorators/public.decorator';
 import { User } from '../common/decorators/user.decorator';
 import { WorkspaceRoles } from '../common/decorators/workspace-roles.decorator';

@@ -68,9 +68,7 @@ export class WorkspacesService {
 
   async findAll(user: SafeUser): Promise<HttpResponse<{ workspaces: Workspace[] }>> {
     const userId = await this.userRepository.retrieveId({ email: user.email });
-    console.log(userId);
     const userMemberships = await this.workspaceMembershipRepository.find({ where: { userId: userId } });
-    console.log(userMemberships);
     const workspaces = await Promise.all(
       userMemberships.map(async (membership) => {
         const workspace = await this.workspaceRepository.getShortInformation(membership.workspaceId);

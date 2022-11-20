@@ -15,11 +15,8 @@ async function bootstrap() {
 
   app.setGlobalPrefix(appConfig.apiVersion);
   app.enableCors({
+    origin: appConfig.allowedDomains,
     allowedHeaders: appConfig.allowedHeaders,
-    origin: (origin, callback) => {
-      console.log('Request...');
-      return callback(null, origin);
-    },
     credentials: true
   });
   app.use(cookieParser(securityConfig.cookieSecret));

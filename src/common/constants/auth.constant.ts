@@ -10,5 +10,3 @@ export enum JwtStrategy {
   Access = 'jwt-at',
   Refresh = 'jwt-rt'
 }
-
-export const TEMPORARITY_API_KEY_HEADER = 'x-temporarity-api-key';

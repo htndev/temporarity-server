@@ -1,4 +1,3 @@
-import { DisableCorsMiddleware } from './middleware/disable-cors.middleware';
 import { MiddlewareConsumer, Module, NestModule, ValidationPipe } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_PIPE } from '@nestjs/core';
@@ -9,7 +8,6 @@ import { NodeEnvironment } from './common/constants/environment.constant';
 import { ConfigModule as LocalConfigModule } from './common/providers/config/config.module';
 import { DatabaseConfig } from './common/providers/config/database.config';
 import { RequestLoggerMiddleware } from './middleware/logger.middleware';
-import { RoutesModule } from './routes/routes.module';
 import { UserPreferencesModule } from './user-preferences/user-preferences.module';
 import { WorkspaceRoutesModule } from './workspace-routes/workspace-routes.module';
 import { WorkspacesModule } from './workspaces/workspaces.module';
@@ -45,7 +43,6 @@ import { WorkspacesModule } from './workspaces/workspaces.module';
     AuthModule,
     CommonModule,
     WorkspacesModule,
-    RoutesModule,
     WorkspaceRoutesModule,
     UserPreferencesModule
   ],
@@ -53,6 +50,6 @@ import { WorkspacesModule } from './workspaces/workspaces.module';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(RequestLoggerMiddleware).forRoutes('*'); //.apply(DisableCorsMiddleware).forRoutes('/routes/*');
+    consumer.apply(RequestLoggerMiddleware).forRoutes('*');
   }
 }
