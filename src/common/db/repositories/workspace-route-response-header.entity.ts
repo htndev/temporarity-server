@@ -10,7 +10,7 @@ export class WorkspaceRouteResponseHeaderRepository extends BaseRepository<Works
   }
 
   async getRouteRequestHeaders(routeRequestId: ObjectID): Promise<{ header: string; value: any }[]> {
-    const headers = await this.find({ where: { routeRequestId } });
+    const headers = await this.find({ where: { routeRequestId: routeRequestId } });
 
     return headers.map(({ header, value }) => ({ header, value }));
   }

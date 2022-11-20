@@ -6,7 +6,7 @@ import { BaseRepository } from './base.repository';
 @Injectable()
 export class IdentityProviderRepository extends BaseRepository<IdentityProvider> {
   async getIdentityProviderByUser(user: User): Promise<IdentityProvider['provider'] | null> {
-    const identityProvider = await this.findOne({ where: { userId: user.id } });
+    const identityProvider = await this.findOne({ where: { userId: user._id } });
 
     return identityProvider?.provider;
   }

@@ -1,3 +1,4 @@
+import { transformObjectId } from './../../utils/db.util';
 import { Injectable } from '@nestjs/common';
 import { ObjectID } from 'typeorm';
 import { Role } from '../../constants/role.constant';
@@ -6,21 +7,21 @@ import { BaseRepository } from './base.repository';
 
 @Injectable()
 export class WorkspaceRoleRepository extends BaseRepository<WorkspaceRole> {
-  async getRoleById(roleId: ObjectID | string) {
-    return this.findOne({ where: { id: roleId } });
+  async getRoleById(roleId: ObjectID) {
+    return this.findOne({ where: { _id: transformObjectId(roleId) } });
   }
 
-  async getEditorRoleId(): Promise<ObjectID | string> {
+  async getEditorRoleId(): Promise<ObjectID> {
     return this.getRoleId(Role.Editor);
   }
 
-  async getOwnerRoleId(): Promise<ObjectID | string> {
+  async getOwnerRoleId(): Promise<ObjectID> {
     return this.getRoleId(Role.Owner);
   }
 
-  private async getRoleId(userRole: Role): Promise<ObjectID | string> {
+  private async getRoleId(userRole: Role): Promise<ObjectID> {
     const role = await this.findOne({ where: { name: userRole } });
 
-    return role.id;
+    return role._id;
   }
 }

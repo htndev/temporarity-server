@@ -13,10 +13,7 @@ export class BaseRepository<T extends BaseEntity> extends Repository<T> {
 
   async retrieveId(entity: Partial<T>) {
     const result = await this.findOne(entity as FindOneOptions<T>);
-    console.log(result);
-    console.log(result.id);
-    // @ts-ignore
-    console.log(result._id);
-    return result ? result.id : null;
+
+    return result ? result._id : null;
   }
 }

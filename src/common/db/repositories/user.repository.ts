@@ -28,7 +28,7 @@ export class UserRepository extends BaseRepository<User> {
     const identityProvider = new IdentityProvider();
     identityProvider.provider = provider;
     identityProvider.providerId = providerId;
-    identityProvider.userId = user.id;
+    identityProvider.userId = user._id;
     await identityProvider.save();
 
     return user;

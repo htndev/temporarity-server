@@ -1,4 +1,4 @@
-import { Column, Entity, ObjectID, ObjectIdColumn } from 'typeorm';
+import { Column, Entity, ObjectID } from 'typeorm';
 import { AuthScope } from '../../constants/auth.constant';
 import { BaseEntity } from './base.entity';
 
@@ -10,6 +10,6 @@ export class IdentityProvider extends BaseEntity {
   @Column()
   providerId: string | number;
 
-  @ObjectIdColumn()
-  userId: ObjectID | string;
+  @Column(() => ObjectID)
+  userId: ObjectID;
 }

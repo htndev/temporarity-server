@@ -1,6 +1,7 @@
 import { Provider, Type } from '@nestjs/common';
 import { getDataSourceToken } from '@nestjs/typeorm';
-import { DataSource, DataSourceOptions } from 'typeorm';
+import { ObjectId } from 'mongodb';
+import { DataSource, DataSourceOptions, ObjectID } from 'typeorm';
 import { BaseEntity } from '../db/entities/base.entity';
 import { BaseRepository } from '../db/repositories/base.repository';
 
@@ -19,3 +20,10 @@ export function provideCustomRepository<Entity extends BaseEntity, Repo extends 
     }
   };
 }
+
+export const transformObjectIdObject = (value: ObjectID): ObjectID => new ObjectId(value.toHexString()) as any;
+
+export const transformObjectIdString = (value: string): ObjectID => new ObjectId(value) as any;
+
+export const transformObjectId = (value: ObjectID | string): ObjectID =>
+  typeof value === 'string' ? (new ObjectId(value) as any) : (new ObjectId(value.toHexString()) as any);

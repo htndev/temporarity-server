@@ -1,10 +1,10 @@
-import { Column, Entity, ObjectID, ObjectIdColumn } from 'typeorm';
+import { Column, Entity, ObjectID } from 'typeorm';
 import { BaseEntity } from './base.entity';
 
 @Entity('user_preferences')
 export class UserPreferences extends BaseEntity {
-  @ObjectIdColumn()
-  userId: ObjectID | string;
+  @Column({ type: 'string' })
+  private userId: ObjectID;
 
   @Column()
   language: string;

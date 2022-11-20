@@ -1,8 +1,8 @@
-import { Entity, ObjectID, ObjectIdColumn } from 'typeorm';
+import { Column, Entity, ObjectID } from 'typeorm';
 import { BaseEntity } from './base.entity';
 
 @Entity({ name: 'workspace_route_requests' })
 export class WorkspaceRouteRequest extends BaseEntity {
-  @ObjectIdColumn()
-  routeId: ObjectID | string;
+  @Column({ type: 'string' })
+  routeId: ObjectID;
 }

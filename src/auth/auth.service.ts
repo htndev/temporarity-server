@@ -50,7 +50,7 @@ export class AuthService {
     const user = this.userRepository.create({ fullName, email, password });
     await user.save();
 
-    const userPreferences = this.userPreferencesRepository.create({ userId: user.id, language: language ?? 'en-US' });
+    const userPreferences = this.userPreferencesRepository.create({ userId: user._id, language: language ?? 'en-US' });
     await userPreferences.save();
 
     const tokens = await this.tokenService.generateTokens({ email, fullName });

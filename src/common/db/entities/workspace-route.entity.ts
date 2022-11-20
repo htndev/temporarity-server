@@ -1,11 +1,11 @@
-import { Column, Entity, Index, ObjectID, ObjectIdColumn } from 'typeorm';
+import { Column, Entity, Index, ObjectID } from 'typeorm';
 import { HttpMethod } from './../../types/workspace-route.type';
 import { BaseEntity } from './base.entity';
 
 @Entity({ name: 'workspace_routes' })
 export class WorkspaceRoute extends BaseEntity {
-  @ObjectIdColumn()
-  workspaceId: ObjectID | string;
+  @Column({ type: 'string' })
+  workspaceId: ObjectID;
 
   @Column()
   @Index()

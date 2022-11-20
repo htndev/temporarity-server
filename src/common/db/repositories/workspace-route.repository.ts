@@ -10,12 +10,13 @@ import { WorkspaceRouteRequest } from '../entities/workspace-route-request.entit
 import { WorkspaceRouteResponse } from '../entities/workspace-route-response.entity';
 import { WorkspaceRoute } from '../entities/workspace-route.entity';
 import { Boxed } from './../../../domains/generator/utils/base.type';
+import { transformObjectId } from './../../utils/db.util';
 import { BaseRepository } from './base.repository';
 
 @Injectable()
 export class WorkspaceRouteRepository extends BaseRepository<WorkspaceRoute> {
   async getRouteByPath(
-    workspaceId: ObjectID | string,
+    workspaceId: ObjectID,
     path: string,
     methodsOrMethod: Boxed<HttpMethod>
   ): Promise<Nullable<WorkspaceRoute[]>> {
@@ -51,20 +52,20 @@ export class WorkspaceRouteRepository extends BaseRepository<WorkspaceRoute> {
     return routesWithMaxValue;
   }
 
-  async findWorkspaceRoutes(workspaceId: ObjectID | string, path: string): Promise<WorkspaceRoute[]> {
+  async findWorkspaceRoutes(workspaceId: ObjectID, path: string): Promise<WorkspaceRoute[]> {
     const routes = await this.find({ where: { workspaceId } });
 
     return routes.filter((route) => route.pathPattern.test(`/${path}`)) || null;
   }
 
-  async getRoutes(workspaceId: ObjectID | string): Promise<Route[]> {
+  async getRoutes(workspaceId: ObjectID): Promise<Route[]> {
     return this.find({ where: { workspaceId } }).then((routes) =>
-      routes.map((route) => new Route(route.id, route.path, route.methods, route.status))
+      routes.map((route) => new Route(route._id, route.path, route.methods, route.status))
     );
   }
 
   async createRoute(
-    workspaceId: ObjectID | string,
+    workspaceId: ObjectID,
     path: string,
     methods: HttpMethod[],
     status: number,
@@ -82,11 +83,11 @@ export class WorkspaceRouteRepository extends BaseRepository<WorkspaceRoute> {
     await workspaceRoute.save();
 
     const workspaceRouteRequest = new WorkspaceRouteRequest();
-    workspaceRouteRequest.routeId = workspaceRoute.id;
+    workspaceRouteRequest.routeId = workspaceRoute._id;
     await workspaceRouteRequest.save();
 
     const workspaceRouteResponse = new WorkspaceRouteResponse();
-    workspaceRouteResponse.routeId = workspaceRoute.id;
+    workspaceRouteResponse.routeId = workspaceRoute._id;
     workspaceRouteResponse.responseType = responseType;
     workspaceRouteResponse.schema = response;
     await workspaceRouteResponse.save();
@@ -94,8 +95,7 @@ export class WorkspaceRouteRepository extends BaseRepository<WorkspaceRoute> {
     return workspaceRoute;
   }
 
-  async getRoute(workspaceId: ObjectID | string, id: ObjectID | string): Promise<WorkspaceRoute | null> {
-    // ! TypeORM has an issue with field _id in search. Field id is working in the wrong way
-    return this.findOne({ where: { id, workspaceId } });
+  async getRoute(workspaceId: ObjectID, id: ObjectID | string): Promise<WorkspaceRoute | null> {
+    return this.findOne({ where: { _id: transformObjectId(id), workspaceId } });
   }
 }

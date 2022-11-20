@@ -43,7 +43,7 @@ export class RoutesService {
   }) {
     const workspace = await this.workspaceRepository.getWorkspaceBySlug(slug);
     const incomingRoute = request.params[0];
-    const routes = await this.workspaceRouteRepository.getRouteByPath(workspace.id, incomingRoute, [
+    const routes = await this.workspaceRouteRepository.getRouteByPath(workspace._id, incomingRoute, [
       method,
       HttpMethod.ALL
     ]);
@@ -70,8 +70,7 @@ export class RoutesService {
   }
 
   private async buildResponse(route: WorkspaceRoute, response: Response) {
-    // @ts-ignore
-    const workspaceResponse = await this.workspaceRouteResponseRepository.findOne({ where: { routeId: route.id } });
+    const workspaceResponse = await this.workspaceRouteResponseRepository.findOne({ where: { routeId: route._id } });
     response.status(route.status);
 
     switch (true) {

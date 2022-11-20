@@ -35,7 +35,7 @@ export class WorkspaceRoutesService {
 
   async getWorkspaceRoutes(slug: string): Promise<HttpResponse<{ routes: any[] }>> {
     const workspace = await this.workspaceRepository.getWorkspaceBySlug(slug);
-    const routes = await this.workspaceRouteRepository.getRoutes(workspace.id);
+    const routes = await this.workspaceRouteRepository.getRoutes(workspace._id);
 
     return {
       status: HttpStatus.OK,
@@ -68,7 +68,7 @@ export class WorkspaceRoutesService {
     const workspace = await this.workspaceRepository.getWorkspaceBySlug(slug);
 
     const similarRoutes = await this.workspaceRouteRepository.getRouteByPath(
-      workspace.id,
+      workspace._id,
       buildRoutePath(createWorkspaceRouteDto.path),
       createWorkspaceRouteDto.methods
     );
@@ -105,7 +105,7 @@ export class WorkspaceRoutesService {
     }
 
     await this.workspaceRouteRepository.createRoute(
-      workspace.id,
+      workspace._id,
       createWorkspaceRouteDto.path,
       [...new Set(createWorkspaceRouteDto.methods)],
       createWorkspaceRouteDto.status,
@@ -121,9 +121,8 @@ export class WorkspaceRoutesService {
 
   async getRouteDetails(slug: string, id: string) {
     const workspace = await this.workspaceRepository.getWorkspaceBySlug(slug);
-    const route = await this.workspaceRouteRepository.getRoute(workspace.id, id);
-    // @ts-ignore
-    const response = await this.workspaceRouteResponseRepository.findOne({ where: { routeId: route.id } });
+    const route = await this.workspaceRouteRepository.getRoute(workspace._id, id);
+    const response = await this.workspaceRouteResponseRepository.findOne({ where: { routeId: route._id } });
 
     return {
       status: HttpStatus.OK,
@@ -135,7 +134,7 @@ export class WorkspaceRoutesService {
 
   async updateRouteMethods(slug: string, id: string, updateRouteMethodsDto: UpdateRouteMethodsDto) {
     const workspace = await this.workspaceRepository.getWorkspaceBySlug(slug);
-    const route = await this.workspaceRouteRepository.getRoute(workspace.id, id);
+    const route = await this.workspaceRouteRepository.getRoute(workspace._id, id);
 
     if (
       updateRouteMethodsDto.methods.length === 0 &&
@@ -144,7 +143,7 @@ export class WorkspaceRoutesService {
       throw new BadRequestException('Invalid HTTP methods provided.');
     }
 
-    const conflictingRoute = await this.getConflictingRoute(workspace.id, route, updateRouteMethodsDto.methods);
+    const conflictingRoute = await this.getConflictingRoute(workspace._id, route, updateRouteMethodsDto.methods);
 
     if (conflictingRoute) {
       throw new ConflictException(
@@ -164,10 +163,10 @@ export class WorkspaceRoutesService {
 
   async updateRoutePath(slug: string, id: string, updateRoutePathDto: UpdateRoutePathDto) {
     const workspace = await this.workspaceRepository.getWorkspaceBySlug(slug);
-    const route = await this.workspaceRouteRepository.getRoute(workspace.id, id);
+    const route = await this.workspaceRouteRepository.getRoute(workspace._id, id);
 
     const conflictingRoutes = await this.workspaceRouteRepository.getRouteByPath(
-      workspace.id,
+      workspace._id,
       buildRoutePath(updateRoutePathDto.path),
       route.methods
     );
@@ -202,7 +201,7 @@ export class WorkspaceRoutesService {
 
   async updateRouteStatus(slug: string, id: string, updateRouteStatusDto: UpdateRouteStatusDto) {
     const workspace = await this.workspaceRepository.getWorkspaceBySlug(slug);
-    const route = await this.workspaceRouteRepository.getRoute(workspace.id, id);
+    const route = await this.workspaceRouteRepository.getRoute(workspace._id, id);
 
     route.status = updateRouteStatusDto.status;
 
@@ -216,7 +215,7 @@ export class WorkspaceRoutesService {
 
   async updateRouteResponse(slug: string, id: string, updateRouteResponseDto: UpdateRouteResponseDto) {
     const workspace = await this.workspaceRepository.getWorkspaceBySlug(slug);
-    const route = await this.workspaceRouteRepository.getRoute(workspace.id, id);
+    const route = await this.workspaceRouteRepository.getRoute(workspace._id, id);
 
     if (updateRouteResponseDto.responseType === WorkspaceRouteResponseType.File) {
       const possibleBuffer: Buffer = (updateRouteResponseDto.response as any)?.buffer;
@@ -236,8 +235,7 @@ export class WorkspaceRoutesService {
         updateRouteResponseDto.response = url;
       }
     }
-    // @ts-ignore
-    const response = await this.workspaceRouteResponseRepository.findOne({ where: { routeId: route.id } });
+    const response = await this.workspaceRouteResponseRepository.findOne({ where: { routeId: route._id } });
 
     response.responseType = updateRouteResponseDto.responseType;
     response.schema = updateRouteResponseDto.response as any;
@@ -252,18 +250,17 @@ export class WorkspaceRoutesService {
 
   async deleteRoute(slug: string, routeId: string) {
     const workspace = await this.workspaceRepository.getWorkspaceBySlug(slug);
-    const route = await this.workspaceRouteRepository.getRoute(workspace.id, routeId);
+    const route = await this.workspaceRouteRepository.getRoute(workspace._id, routeId);
 
     if (!route) {
       throw new NotFoundException('Route not found');
     }
 
-    // @ts-ignore
-    const routeRequest = await this.workspaceRouteRequestRepository.findOne({ where: { routeId: route.id } });
-    // @ts-ignore
-    const routeResponseHeaders = await this.workspaceRouteRequestRepository.find({ where: { routeId: route.id } });
-    // @ts-ignore
-    const routeResponse = await this.workspaceRouteResponseRepository.findOne({ where: { routeId: route.id } });
+    const searchCondition = { where: { routeId: route._id } };
+
+    const routeRequest = await this.workspaceRouteRequestRepository.findOne(searchCondition);
+    const routeResponseHeaders = await this.workspaceRouteRequestRepository.find(searchCondition);
+    const routeResponse = await this.workspaceRouteResponseRepository.findOne(searchCondition);
 
     await routeResponse.remove();
     await routeRequest.remove();
@@ -277,7 +274,7 @@ export class WorkspaceRoutesService {
   }
 
   private async getConflictingRoute(
-    workspaceId: ObjectID | string,
+    workspaceId: ObjectID,
     route: WorkspaceRoute,
     methods: HttpMethod[]
   ): Promise<WorkspaceRoute | null> {
@@ -287,7 +284,7 @@ export class WorkspaceRoutesService {
       (wr) =>
         methods.some((method) => wr.methods.includes(method)) &&
         wr.pathPattern.toString() === route.pathPattern.toString() &&
-        wr.id.toString() !== route.id.toString()
+        wr._id.toString() !== route._id.toString()
     );
 
     return conflictRoute ?? null;

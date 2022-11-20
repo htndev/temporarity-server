@@ -1,4 +1,4 @@
-import { Column, Entity, Index, ObjectID, ObjectIdColumn } from 'typeorm';
+import { Column, Entity, Index, ObjectID } from 'typeorm';
 import { BaseEntity } from './base.entity';
 
 @Entity({ name: 'workspace_invitations' })
@@ -7,9 +7,9 @@ export class WorkspaceInvitation extends BaseEntity {
   @Index()
   inviteCode: string;
 
-  @ObjectIdColumn()
-  userId: ObjectID | string;
+  @Column({ type: 'string' })
+  userId: ObjectID;
 
-  @ObjectIdColumn()
-  workspaceId: ObjectID | string;
+  @Column({ type: 'string' })
+  workspaceId: ObjectID;
 }

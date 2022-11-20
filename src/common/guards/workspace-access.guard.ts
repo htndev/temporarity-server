@@ -49,7 +49,7 @@ export class WorkspaceAccessGuard implements CanActivate {
     }
 
     const userId = await this.userRepository.retrieveId({ email: user.email });
-    const membership = await this.workspaceMembershipRepository.getUserMembership(workspace.id, userId);
+    const membership = await this.workspaceMembershipRepository.getUserMembership(workspace._id, userId);
 
     if (!membership) {
       throw new ForbiddenException();

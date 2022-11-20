@@ -1,6 +1,5 @@
 import { BadRequestException, ConflictException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { Response } from 'express';
-import { ObjectId } from 'mongodb';
 import { In, ObjectID } from 'typeorm';
 import { EMAIL_INVITATION_TEMPLATE } from '../common/constants/email.constant';
 import { Role } from '../common/constants/role.constant';
@@ -55,7 +54,7 @@ export class WorkspacesService {
     await workspace.save();
 
     const workspaceMembership = this.workspaceMembershipRepository.create({
-      workspaceId: workspace.id,
+      workspaceId: workspace._id,
       userId: userId,
       role: await this.workspaceRoleRepository.getOwnerRoleId()
     });
@@ -69,6 +68,7 @@ export class WorkspacesService {
 
   async findAll(user: SafeUser): Promise<HttpResponse<{ workspaces: Workspace[] }>> {
     const userId = await this.userRepository.retrieveId({ email: user.email });
+    console.log(userId);
     const userMemberships = await this.workspaceMembershipRepository.find({ where: { userId: userId } });
     console.log(userMemberships);
     const workspaces = await Promise.all(
@@ -136,7 +136,7 @@ export class WorkspacesService {
 
     const userId = await this.userRepository.retrieveId({ email: currentUser.email });
     const workspace = await this.workspaceRepository.getWorkspaceBySlug(slug);
-    const role = await this.getRole(workspace.id, userId);
+    const role = await this.getRole(workspace._id, userId);
 
     if (role.name !== Role.Owner) {
       throw new BadRequestException('Only owner can invite new members to the workspace.');
@@ -150,7 +150,7 @@ export class WorkspacesService {
 
     const notMembers = await Promise.all(
       registeredUsers.map(async (user) => {
-        const membershipRecord = await this.workspaceMembershipRepository.getUserMembership(workspace.id, user.id);
+        const membershipRecord = await this.workspaceMembershipRepository.getUserMembership(workspace._id, user._id);
 
         return { user, hasMembership: !!membershipRecord };
       })
@@ -160,8 +160,8 @@ export class WorkspacesService {
       notMembers.map(async (user) => {
         const existingWorkspaceInvitation = await this.workspaceInvitationRepository.findOne({
           where: {
-            userId: user.id,
-            workspaceId: workspace.id
+            userId: user._id,
+            workspaceId: workspace._id
           }
         });
 
@@ -170,9 +170,9 @@ export class WorkspacesService {
         }
 
         const newWorkspaceInvitation = this.workspaceInvitationRepository.create({
-          userId: user.id,
+          userId: user._id,
           inviteCode: await this.workspaceInvitationRepository.generateInviteCode(),
-          workspaceId: workspace.id
+          workspaceId: workspace._id
         });
 
         await newWorkspaceInvitation.save();
@@ -205,7 +205,7 @@ export class WorkspacesService {
       );
     }
 
-    const membershipRecord = await this.workspaceMembershipRepository.getUserMembership(workspace.id, userId);
+    const membershipRecord = await this.workspaceMembershipRepository.getUserMembership(workspace._id, userId);
 
     if (!membershipRecord) {
       throw new NotFoundException(`User ${excludeUserFromWorkspaceDto.email} is not a member of '${slug}' workspace.`);
@@ -228,8 +228,7 @@ export class WorkspacesService {
 
     const workspaceInvitation = await this.workspaceInvitationRepository.findOne({
       where: {
-        // @ts-ignore
-        workspaceId: workspace.id,
+        workspaceId: workspace._id,
         inviteCode
       }
     });
@@ -238,12 +237,11 @@ export class WorkspacesService {
       throw new NotFoundException('Invitation is not found');
     }
 
-    // @ts-ignore
-    const user = await this.userRepository.findOne(workspaceInvitation.userId);
+    const user = await this.userRepository.findOne({ where: { _id: workspaceInvitation.userId } });
 
     const newMembership = this.workspaceMembershipRepository.create({
-      workspaceId: workspace.id,
-      userId: user.id,
+      workspaceId: workspace._id,
+      userId: user._id,
       role: await this.workspaceRoleRepository.getEditorRoleId()
     });
 
@@ -261,14 +259,16 @@ export class WorkspacesService {
 
   private async getWorkspaceMembership(slug: string): Promise<WorkspaceMember[]> {
     const workspace = await this.workspaceRepository.getWorkspaceBySlug(slug);
-    const workspaceMembership = await this.workspaceMembershipRepository.find({ where: { workspaceId: workspace.id } });
+    const workspaceMembership = await this.workspaceMembershipRepository.find({
+      where: { workspaceId: workspace._id }
+    });
     const workspaceUsers = await this.userRepository.safeFindUsers(workspaceMembership.map((wm) => wm.userId));
 
     const usersWithRoles = await Promise.all(
       workspaceUsers.map(async (wu) => {
         const userId = await this.userRepository.retrieveId({ email: wu.email });
-        const record = await this.workspaceMembershipRepository.getUserMembership(workspace.id, userId);
-        const role = await this.workspaceRoleRepository.findOne({ where: { id: record.role } });
+        const record = await this.workspaceMembershipRepository.getUserMembership(workspace._id, userId);
+        const role = await this.workspaceRoleRepository.findOne({ where: { _id: record.role } });
 
         return {
           ...wu,
@@ -280,10 +280,10 @@ export class WorkspacesService {
     return usersWithRoles;
   }
 
-  private async getRole(workspaceId: ObjectID | string, userId: ObjectID | string) {
+  private async getRole(workspaceId: ObjectID, userId: ObjectID) {
     const membership = await this.workspaceMembershipRepository.getUserMembership(workspaceId, userId);
 
-    return await this.workspaceRoleRepository.findOne({ where: { id: membership.role } });
+    return await this.workspaceRoleRepository.findOne({ where: { _id: membership.role } });
   }
 
   private async canAccessWorkspace(slug: string, userEmail: string): Promise<boolean> {
@@ -294,7 +294,10 @@ export class WorkspacesService {
     }
 
     const user = await this.userRepository.findOne({ where: { email: userEmail } });
-    const hasAccess = await this.workspaceMembershipRepository.isExists({ workspaceId: workspace.id, userId: user.id });
+    const hasAccess = await this.workspaceMembershipRepository.isExists({
+      workspaceId: workspace._id,
+      userId: user._id
+    });
 
     return hasAccess;
   }
