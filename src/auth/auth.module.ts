@@ -13,8 +13,8 @@ import { FacebookStrategy } from '../strategies/facebook.strategy';
 import { GithubStrategy } from '../strategies/github.strategy';
 import { GoogleStrategy } from '../strategies/google.strategy';
 import { JwtAccessTokenStrategy } from '../strategies/jwt-access.strategy';
-import { UserPreferences } from './../common/db/entities/user-preferences.entity';
-import { UserPreferencesRepository } from './../common/db/repositories/user-preferences.repository';
+import { UserPreferences } from '../common/db/entities/user-preferences.entity';
+import { UserPreferencesRepository } from '../common/db/repositories/user-preferences.repository';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 

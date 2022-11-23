@@ -9,9 +9,9 @@ import { buildRoutePath, buildRoutePattern } from '../../utils/workspace-routes.
 import { WorkspaceRouteRequest } from '../entities/workspace-route-request.entity';
 import { WorkspaceRouteResponse } from '../entities/workspace-route-response.entity';
 import { WorkspaceRoute } from '../entities/workspace-route.entity';
-import { Boxed } from './../../../domains/generator/utils/base.type';
-import { transformObjectId } from './../../utils/db.util';
-import { isSuitableRoute } from './../../utils/routes.util';
+import { Boxed } from '../../../domains/generator/utils/base.type';
+import { transformObjectId } from '../../utils/db.util';
+import { isSuitableRoute } from '../../utils/routes.util';
 import { BaseRepository } from './base.repository';
 
 @Injectable()

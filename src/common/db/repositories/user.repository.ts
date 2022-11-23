@@ -46,7 +46,7 @@ export class UserRepository extends BaseRepository<User> {
 
   async safeFindUsers(ids: (string | ObjectID)[]): Promise<SafeUser[]> {
     // @ts-ignore
-    const users = await this.findBy({ id: { $in: ids } });
+    const users = await this.findBy({ _id: { $in: ids } });
 
     return users.map(this.mapSecureFields);
   }
@@ -55,7 +55,8 @@ export class UserRepository extends BaseRepository<User> {
     return {
       fullName: user.fullName,
       email: user.email,
-      profilePicture: user.profilePicture || null
+      profilePicture: user.profilePicture || null,
+      isOauthUser: user.isOauthUser
     };
   }
 }

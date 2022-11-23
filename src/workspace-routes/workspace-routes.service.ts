@@ -13,7 +13,7 @@ import { HttpResponse } from '../common/types/response.type';
 import { WorkspaceRouteResponseType } from '../common/types/workspace-route-response.type';
 import { HttpMethod, RouteResponseType } from '../common/types/workspace-route.type';
 import { buildRoutePath, buildRoutePattern } from '../common/utils/workspace-routes.util';
-import { Placeholder } from './../common/types/workspace-route.type';
+import { Placeholder } from '../common/types/workspace-route.type';
 import { CreateWorkspaceRouteDto } from './dto/create-workspace-route.dto';
 import { UpdateRouteMethodsDto } from './dto/update-route-methods.dto';
 import { UpdateRoutePathDto } from './dto/update-route-path.dto';

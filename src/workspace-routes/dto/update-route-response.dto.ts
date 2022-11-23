@@ -1,6 +1,6 @@
 import { IsEnum } from 'class-validator';
-import { WorkspaceRouteResponseType } from './../../common/types/workspace-route-response.type';
-import { Boxed } from './../../domains/generator/utils/base.type';
+import { WorkspaceRouteResponseType } from '../../common/types/workspace-route-response.type';
+import { Boxed } from '../../domains/generator/utils/base.type';
 export class UpdateRouteResponseDto {
   @IsEnum(WorkspaceRouteResponseType)
   responseType: WorkspaceRouteResponseType;

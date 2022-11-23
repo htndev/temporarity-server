@@ -1,8 +1,9 @@
 import { IsEmail, IsNotEmpty, IsString, Length, Matches } from 'class-validator';
+import { FULL_NAME_REGEX, PASSWORD_REGEX } from '../../common/constants/regex.constant';
 
 export class CredentialsSignUpDto {
   @IsNotEmpty()
-  @Matches(/^([A-Za-zА-ЯҐЄІЇа-яґєії\.]+.?\s?){0,255}$/, { message: 'Name could include only letters and spaces' })
+  @Matches(FULL_NAME_REGEX, { message: 'Name could include only letters and spaces' })
   fullName: string;
 
   @IsNotEmpty()
@@ -11,7 +12,7 @@ export class CredentialsSignUpDto {
 
   @IsNotEmpty()
   @Length(8, 255)
-  @Matches(/^(?=.*[ -/:-@[-`{-~]+)(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[A-Za-z]).{8,255}$/, {
+  @Matches(PASSWORD_REGEX, {
     message: ({ value }) =>
       `Password should be at least 8 symbols, should not exceed 255 symbols, include at least one digit and special symbol, but received ${value}`
   })

@@ -1,4 +1,4 @@
-import { transformObjectId } from './../../utils/db.util';
+import { transformObjectId } from '../../utils/db.util';
 import { Injectable } from '@nestjs/common';
 import { ObjectID } from 'typeorm';
 import { Workspace } from '../entities/workspace.entity';
