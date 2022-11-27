@@ -1,17 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { ObjectID } from 'typeorm';
 import { Route } from '../../../workspace-routes/entities/route.entity';
-import { Nullable } from '../../types/base.type';
+import { Boxed, Nullable } from '../../types/base.type';
 import { WorkspaceRouteResponseType } from '../../types/workspace-route-response.type';
 import { HttpMethod } from '../../types/workspace-route.type';
+import { transformObjectId } from '../../utils/db.util';
+import { isSuitableRoute } from '../../utils/routes.util';
 import { URLLayer } from '../../utils/url-layer.util';
 import { buildRoutePath, buildRoutePattern } from '../../utils/workspace-routes.util';
+import { WorkspaceRouteAuthorization } from '../entities/workspace-route-authorization.entity';
 import { WorkspaceRouteRequest } from '../entities/workspace-route-request.entity';
 import { WorkspaceRouteResponse } from '../entities/workspace-route-response.entity';
 import { WorkspaceRoute } from '../entities/workspace-route.entity';
-import { Boxed } from '../../../domains/generator/utils/base.type';
-import { transformObjectId } from '../../utils/db.util';
-import { isSuitableRoute } from '../../utils/routes.util';
+import { RequestValidationStrategy } from './../../constants/routes.constant';
 import { BaseRepository } from './base.repository';
 
 @Injectable()
@@ -92,6 +93,11 @@ export class WorkspaceRouteRepository extends BaseRepository<WorkspaceRoute> {
     workspaceRouteResponse.responseType = responseType;
     workspaceRouteResponse.schema = response;
     await workspaceRouteResponse.save();
+
+    const workspaceRouteAuthorization = new WorkspaceRouteAuthorization();
+    workspaceRouteAuthorization.routeId = workspaceRoute._id;
+    workspaceRouteAuthorization.strategy = RequestValidationStrategy.NONE;
+    await workspaceRouteAuthorization.save();
 
     return workspaceRoute;
   }

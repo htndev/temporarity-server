@@ -58,6 +58,7 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
+    "@localazy/cli": "^1.6.5",
     "@nestjs/cli": "^7.6.0",
     "@nestjs/schematics": "^7.3.0",
     "@nestjs/testing": "^7.6.15",

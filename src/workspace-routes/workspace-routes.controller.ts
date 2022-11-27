@@ -1,3 +1,4 @@
+import { UpdateRouteAuthorizationDto } from './dto/update-route-authorization.dto';
 import {
   Body,
   Controller,
@@ -114,6 +115,19 @@ export class WorkspaceRoutesController {
         updateRouteResponseDto.responseType === WorkspaceRouteResponseType.File ? file : updateRouteResponseDto.response
     });
   }
+
+  @Patch('update/:id/authorization')
+  @WorkspaceRoles([Role.Owner, Role.Editor])
+  @GrantWorkspaceExistence()
+  @UseGuards(WorkspaceAccessGuard)
+  updateRouteAuthorization(
+    @Param('slug') slug: string,
+    @Param('id') id: string,
+    @Body() updateRouteAuthorizationDto: UpdateRouteAuthorizationDto
+  ) {
+    return this.workspaceRoutesService.updateRouteAuthorization(slug, id, updateRouteAuthorizationDto);
+  }
+  ƒ;
 
   @Delete(':id')
   @WorkspaceRoles([Role.Owner, Role.Editor])

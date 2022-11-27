@@ -1,5 +1,4 @@
-import { Nullable } from '../../domains/generator/utils/base.type';
-import { Boxed } from './base.type';
+import { Boxed, Nullable } from './base.type';
 
 export enum HttpMethod {
   GET = 'GET',

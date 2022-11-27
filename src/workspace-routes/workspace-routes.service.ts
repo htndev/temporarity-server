@@ -1,3 +1,5 @@
+import { RequestValidationStrategy, REQUEST_VALIDATION_STRATEGIES } from './../common/constants/routes.constant';
+import { WorkspaceRouteAuthorizationRepository } from './../common/db/repositories/workspace-route-authorization.repository';
 import { BadRequestException, ConflictException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectS3, S3 } from 'nestjs-s3';
 import { ObjectID } from 'typeorm';
@@ -19,6 +21,7 @@ import { UpdateRouteMethodsDto } from './dto/update-route-methods.dto';
 import { UpdateRoutePathDto } from './dto/update-route-path.dto';
 import { UpdateRouteResponseDto } from './dto/update-route-response.dto';
 import { UpdateRouteStatusDto } from './dto/update-route-status.dto';
+import { UpdateRouteAuthorizationDto } from './dto/update-route-authorization.dto';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const mime = require('mime-types');
 
@@ -29,6 +32,7 @@ export class WorkspaceRoutesService {
     private readonly workspaceRouteRepository: WorkspaceRouteRepository,
     private readonly workspaceRouteRequestRepository: WorkspaceRouteRequestRepository,
     private readonly workspaceRouteResponseRepository: WorkspaceRouteResponseRepository,
+    private readonly workspaceRouteAuthorizationRepository: WorkspaceRouteAuthorizationRepository,
     @InjectS3() private readonly s3Client: S3,
     private readonly securityConfig: SecurityConfig
   ) {}
@@ -123,12 +127,26 @@ export class WorkspaceRoutesService {
     const workspace = await this.workspaceRepository.getWorkspaceBySlug(slug);
     const route = await this.workspaceRouteRepository.getRoute(workspace._id, id);
     const response = await this.workspaceRouteResponseRepository.findOne({ where: { routeId: route._id } });
+    let authorization = await this.workspaceRouteAuthorizationRepository.findOne({
+      where: { routeId: route._id }
+    });
+
+    if (!authorization) {
+      authorization = await this.workspaceRouteAuthorizationRepository.create({
+        routeId: route._id,
+        strategy: RequestValidationStrategy.NONE
+      });
+    }
 
     return {
       status: HttpStatus.OK,
       message: 'Route details retrieved successfully',
       responseType: response.responseType,
-      response: response.schema
+      response: response.schema,
+      authorization: {
+        strategy: authorization.strategy,
+        payload: authorization.payload || null
+      }
     };
   }
 
@@ -245,6 +263,55 @@ export class WorkspaceRoutesService {
     return {
       status: HttpStatus.OK,
       message: 'Route response updated successfully'
+    };
+  }
+
+  async updateRouteAuthorization(slug: string, id: string, updateRouteAuthorizationDto: UpdateRouteAuthorizationDto) {
+    const workspace = await this.workspaceRepository.getWorkspaceBySlug(slug);
+    const route = await this.workspaceRouteRepository.getRoute(workspace._id, id);
+
+    let routeAuthorization = await this.workspaceRouteAuthorizationRepository.findOne({
+      where: { routeId: route._id }
+    });
+
+    if (!routeAuthorization) {
+      routeAuthorization = this.workspaceRouteAuthorizationRepository.create({
+        routeId: route._id,
+        strategy: RequestValidationStrategy.NONE
+      });
+    }
+
+    if (
+      updateRouteAuthorizationDto.strategy === RequestValidationStrategy.NONE &&
+      routeAuthorization.strategy === RequestValidationStrategy.NONE
+    ) {
+      return {
+        status: HttpStatus.OK,
+        message: 'Route authorization updated successfully'
+      };
+    }
+
+    if (!REQUEST_VALIDATION_STRATEGIES.includes(updateRouteAuthorizationDto.strategy)) {
+      throw new BadRequestException('Invalid request validation strategy provided.');
+    }
+
+    if (updateRouteAuthorizationDto.strategy === RequestValidationStrategy.NONE) {
+      routeAuthorization.strategy = updateRouteAuthorizationDto.strategy;
+      routeAuthorization.payload = null;
+    } else {
+      if (!updateRouteAuthorizationDto.payload) {
+        throw new BadRequestException('Payload is required for this strategy.');
+      }
+
+      routeAuthorization.strategy = updateRouteAuthorizationDto.strategy;
+      routeAuthorization.payload = updateRouteAuthorizationDto.payload;
+    }
+
+    await routeAuthorization.save();
+
+    return {
+      status: HttpStatus.OK,
+      message: 'Route authorization updated successfully'
     };
   }
 

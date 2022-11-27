@@ -10,4 +10,12 @@ export const ALLOWED_HTTP_METHODS = [
   HttpMethod.HEAD
 ];
 
+export enum RequestValidationStrategy {
+  NONE = 'none',
+  JWT = 'jwt',
+  API_KEY = 'api-key'
+}
+
+export const REQUEST_VALIDATION_STRATEGIES = Object.values(RequestValidationStrategy);
+
 export const ROUTE_SEPARATOR = '/';

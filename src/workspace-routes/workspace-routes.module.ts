@@ -1,3 +1,5 @@
+import { WorkspaceRouteAuthorizationRepository } from './../common/db/repositories/workspace-route-authorization.repository';
+import { WorkspaceRouteAuthorization } from './../common/db/entities/workspace-route-authorization.entity';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { NestjsFormDataModule } from 'nestjs-form-data';
@@ -35,7 +37,8 @@ import { WorkspaceRoutesService } from './workspace-routes.service';
       WorkspaceRoute,
       WorkspaceRouteRequest,
       WorkspaceRouteResponseHeader,
-      WorkspaceRouteResponse
+      WorkspaceRouteResponse,
+      WorkspaceRouteAuthorization
     ]),
     ConfigModule,
     S3Module.forRootAsync({
@@ -59,7 +62,8 @@ import { WorkspaceRoutesService } from './workspace-routes.service';
     provideCustomRepository(WorkspaceRoute, WorkspaceRouteRepository),
     provideCustomRepository(WorkspaceRouteRequest, WorkspaceRouteRequestRepository),
     provideCustomRepository(WorkspaceRouteResponseHeader, WorkspaceRouteResponseHeaderRepository),
-    provideCustomRepository(WorkspaceRouteResponse, WorkspaceRouteResponseRepository)
+    provideCustomRepository(WorkspaceRouteResponse, WorkspaceRouteResponseRepository),
+    provideCustomRepository(WorkspaceRouteAuthorization, WorkspaceRouteAuthorizationRepository)
   ]
 })
 export class WorkspaceRoutesModule {}
