@@ -72,7 +72,6 @@ export class WorkspacesService {
       const workspaceTemplate = await this.workspaceRoutesTemplateRepository.findOne({ where: { keyword: template } });
 
       if (workspaceTemplate) {
-        console.log(workspaceTemplate);
         await Promise.all(
           workspaceTemplate.routes.map(async (route) => {
             const workspaceRoute = await this.workspaceRouteRepository.createRoute(
