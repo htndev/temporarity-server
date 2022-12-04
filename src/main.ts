@@ -12,7 +12,6 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const appConfig = app.get(AppConfig);
   const securityConfig = app.get(SecurityConfig);
-
   app.setGlobalPrefix(appConfig.apiVersion);
   app.enableCors({
     origin: appConfig.allowedDomains,
@@ -23,7 +22,6 @@ async function bootstrap() {
   app.use(helmet());
   app.use(compression());
   app.disable('x-powered-by');
-
   await app.listen(appConfig.port);
   Logger.verbose(`Server launched: ${appConfig.url}`);
 }

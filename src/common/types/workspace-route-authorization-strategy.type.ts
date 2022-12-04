@@ -1,4 +1,4 @@
-enum JwtCondition {
+export enum JwtCondition {
   BePresented = 'be-presented',
   NotExpired = 'not-expired',
   BeValid = 'be-valid',
@@ -7,22 +7,22 @@ enum JwtCondition {
 
 interface BePresentedConfig {
   condition: JwtCondition.BePresented;
-  payload: { token: string };
+  payload?: null;
 }
 
 interface NotExpiredConfig {
   condition: JwtCondition.NotExpired;
-  payload: { token: string };
+  payload?: null;
 }
 
 interface BeValidConfig {
   condition: JwtCondition.BeValid;
-  payload: { token: string; signature: string };
+  payload: { signature: string };
 }
 
 interface EqualsConfig {
   condition: JwtCondition.Equals;
-  payload: { token: string; value: string };
+  payload: { value: string };
 }
 
 export type JwtStrategyConfig = BePresentedConfig | NotExpiredConfig | BeValidConfig | EqualsConfig;
@@ -31,3 +31,5 @@ export interface ApiKeyConfig {
   apiKeyQueryParam: string;
   apiKey: string;
 }
+
+export type WorkspaceRouteAuthorizationStrategy = JwtStrategyConfig | ApiKeyConfig;

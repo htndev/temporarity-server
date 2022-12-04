@@ -1,3 +1,7 @@
+import { WorkspaceRouteAuthorizationRepository } from './../common/db/repositories/workspace-route-authorization.repository';
+import { WorkspaceRouteAuthorization } from './../common/db/entities/workspace-route-authorization.entity';
+import { WorkspaceRoutesTemplateRepository } from './../common/db/repositories/workspace-routes-template.repository';
+import { WorkspaceRoutesTemplate } from './../common/db/entities/workspace-routes-template.entity';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../common/db/entities/user.entity';
@@ -39,7 +43,9 @@ import { WorkspacesService } from './workspaces.service';
       WorkspaceRouteRequest,
       WorkspaceRouteResponseHeader,
       WorkspaceRouteResponse,
-      WorkspaceInvitation
+      WorkspaceInvitation,
+      WorkspaceRoutesTemplate,
+      WorkspaceRouteAuthorization
     ])
   ],
   controllers: [WorkspacesController],
@@ -53,7 +59,9 @@ import { WorkspacesService } from './workspaces.service';
     provideCustomRepository(WorkspaceRouteRequest, WorkspaceRouteRequestRepository),
     provideCustomRepository(WorkspaceRouteResponseHeader, WorkspaceRouteResponseHeaderRepository),
     provideCustomRepository(WorkspaceRouteResponse, WorkspaceRouteResponseRepository),
-    provideCustomRepository(WorkspaceInvitation, WorkspaceInvitationRepository)
+    provideCustomRepository(WorkspaceInvitation, WorkspaceInvitationRepository),
+    provideCustomRepository(WorkspaceRoutesTemplate, WorkspaceRoutesTemplateRepository),
+    provideCustomRepository(WorkspaceRouteAuthorization, WorkspaceRouteAuthorizationRepository)
   ]
 })
 export class WorkspacesModule {}

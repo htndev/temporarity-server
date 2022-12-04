@@ -1,3 +1,6 @@
+import { WorkspaceRouteAuthorizationRepository } from './../common/db/repositories/workspace-route-authorization.repository';
+import { WorkspaceRouteRepository } from './../common/db/repositories/workspace-route.repository';
+import { WorkspaceRoute } from './../common/db/entities/workspace-route.entity';
 import { BadRequestException, ConflictException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { Response } from 'express';
 import { In, ObjectID } from 'typeorm';
@@ -14,9 +17,10 @@ import { EmailService } from '../common/providers/email/email.service';
 import { SecurityProvider } from '../common/providers/security/security.service';
 import { SafeUser } from '../common/types/auth.type';
 import { HttpResponse } from '../common/types/response.type';
-import { WorkspaceMember, WorkspaceWithDetails } from '../common/types/workspace.type';
+import { WorkspaceMember, WorkspaceRoutesShortTemplate, WorkspaceWithDetails } from '../common/types/workspace.type';
 import { SafeWorkspace } from '../common/types/workspaces.type';
 import { redirect } from '../common/utils/redirect.util';
+import { WorkspaceRoutesTemplateRepository } from './../common/db/repositories/workspace-routes-template.repository';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { ExcludeUserFromWorkspaceDto } from './dto/exclude-user-from-workspace.dto';
 import { InviteUsersDto } from './dto/invite-users.dto';
@@ -32,10 +36,13 @@ export class WorkspacesService {
     private readonly workspaceInvitationRepository: WorkspaceInvitationRepository,
     private readonly workspaceMembershipRepository: WorkspaceMembershipRepository,
     private readonly workspaceRepository: WorkspaceRepository,
-    private readonly workspaceRoleRepository: WorkspaceRoleRepository
+    private readonly workspaceRouteRepository: WorkspaceRouteRepository,
+    private readonly workspaceRoleRepository: WorkspaceRoleRepository,
+    private readonly workspaceRoutesTemplateRepository: WorkspaceRoutesTemplateRepository,
+    private readonly workspaceRouteAuthorizationRepository: WorkspaceRouteAuthorizationRepository
   ) {}
 
-  async create({ name, slug, description }: CreateWorkspaceDto, user: SafeUser) {
+  async create({ name, slug, description, template }: CreateWorkspaceDto, user: SafeUser) {
     const workspaceWithSlugExists = await this.workspaceRepository.isExists({ slug });
 
     if (workspaceWithSlugExists) {
@@ -60,6 +67,37 @@ export class WorkspacesService {
     });
 
     await workspaceMembership.save();
+
+    if (template) {
+      const workspaceTemplate = await this.workspaceRoutesTemplateRepository.findOne({ where: { keyword: template } });
+
+      if (workspaceTemplate) {
+        console.log(workspaceTemplate);
+        await Promise.all(
+          workspaceTemplate.routes.map(async (route) => {
+            const workspaceRoute = await this.workspaceRouteRepository.createRoute(
+              workspace._id,
+              route.path,
+              route.methods,
+              route.status,
+              route.responseType,
+              route.response
+            );
+
+            await workspaceRoute.save();
+
+            const authorization = await this.workspaceRouteAuthorizationRepository.findOne({
+              where: { routeId: workspaceRoute._id }
+            });
+
+            authorization.strategy = route.authorization.strategy;
+            authorization.payload = route.authorization.payload;
+
+            await authorization.save();
+          })
+        );
+      }
+    }
 
     return {
       status: HttpStatus.CREATED
@@ -124,6 +162,16 @@ export class WorkspacesService {
         ...this.mapSafeWorkspace(workspace),
         membership: await this.getWorkspaceMembership(slug)
       }
+    };
+  }
+
+  async getTemplates(): Promise<HttpResponse<{ templates: WorkspaceRoutesShortTemplate[] }>> {
+    const templates = await this.workspaceRoutesTemplateRepository.getGeneralTemplates();
+
+    return {
+      status: HttpStatus.OK,
+      message: 'Templates retrieved successfully',
+      templates
     };
   }
 

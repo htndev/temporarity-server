@@ -23,6 +23,12 @@ export class WorkspacesController {
     return this.workspacesService.create(createWorkspaceDto, user);
   }
 
+  @Get('/templates')
+  @WorkspaceRoles([Role.Owner, Role.Editor])
+  getTemplates() {
+    return this.workspacesService.getTemplates();
+  }
+
   @Post('/:slug/invite')
   @WorkspaceRoles([Role.Owner])
   @GrantWorkspaceExistence()

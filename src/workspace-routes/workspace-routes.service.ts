@@ -1,5 +1,3 @@
-import { RequestValidationStrategy, REQUEST_VALIDATION_STRATEGIES } from './../common/constants/routes.constant';
-import { WorkspaceRouteAuthorizationRepository } from './../common/db/repositories/workspace-route-authorization.repository';
 import { BadRequestException, ConflictException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectS3, S3 } from 'nestjs-s3';
 import { ObjectID } from 'typeorm';
@@ -13,15 +11,16 @@ import { WorkspaceRepository } from '../common/db/repositories/workspace.reposit
 import { SecurityConfig } from '../common/providers/config/security.config';
 import { HttpResponse } from '../common/types/response.type';
 import { WorkspaceRouteResponseType } from '../common/types/workspace-route-response.type';
-import { HttpMethod, RouteResponseType } from '../common/types/workspace-route.type';
+import { HttpMethod, Placeholder, RouteResponseType } from '../common/types/workspace-route.type';
 import { buildRoutePath, buildRoutePattern } from '../common/utils/workspace-routes.util';
-import { Placeholder } from '../common/types/workspace-route.type';
+import { RequestValidationStrategy, REQUEST_VALIDATION_STRATEGIES } from './../common/constants/routes.constant';
+import { WorkspaceRouteAuthorizationRepository } from './../common/db/repositories/workspace-route-authorization.repository';
 import { CreateWorkspaceRouteDto } from './dto/create-workspace-route.dto';
+import { UpdateRouteAuthorizationDto } from './dto/update-route-authorization.dto';
 import { UpdateRouteMethodsDto } from './dto/update-route-methods.dto';
 import { UpdateRoutePathDto } from './dto/update-route-path.dto';
 import { UpdateRouteResponseDto } from './dto/update-route-response.dto';
 import { UpdateRouteStatusDto } from './dto/update-route-status.dto';
-import { UpdateRouteAuthorizationDto } from './dto/update-route-authorization.dto';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const mime = require('mime-types');
 

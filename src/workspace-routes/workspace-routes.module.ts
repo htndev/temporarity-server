@@ -1,5 +1,3 @@
-import { WorkspaceRouteAuthorizationRepository } from './../common/db/repositories/workspace-route-authorization.repository';
-import { WorkspaceRouteAuthorization } from './../common/db/entities/workspace-route-authorization.entity';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { NestjsFormDataModule } from 'nestjs-form-data';
@@ -23,6 +21,8 @@ import { WorkspaceRepository } from '../common/db/repositories/workspace.reposit
 import { ConfigModule } from '../common/providers/config/config.module';
 import { SecurityConfig } from '../common/providers/config/security.config';
 import { provideCustomRepository } from '../common/utils/db.util';
+import { WorkspaceRouteAuthorization } from './../common/db/entities/workspace-route-authorization.entity';
+import { WorkspaceRouteAuthorizationRepository } from './../common/db/repositories/workspace-route-authorization.repository';
 import { WorkspaceRoutesController } from './workspace-routes.controller';
 import { WorkspaceRoutesService } from './workspace-routes.service';
 
