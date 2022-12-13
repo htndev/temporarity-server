@@ -1,9 +1,6 @@
-import { WorkspaceRouteAuthorizationRepository } from './../common/db/repositories/workspace-route-authorization.repository';
-import { WorkspaceRouteRepository } from './../common/db/repositories/workspace-route.repository';
-import { WorkspaceRoute } from './../common/db/entities/workspace-route.entity';
 import { BadRequestException, ConflictException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { Response } from 'express';
-import { In, ObjectID } from 'typeorm';
+import { ObjectID } from 'typeorm';
 import { EMAIL_INVITATION_TEMPLATE } from '../common/constants/email.constant';
 import { Role } from '../common/constants/role.constant';
 import { Workspace as WorkspaceEntity } from '../common/db/entities/workspace.entity';
@@ -20,6 +17,8 @@ import { HttpResponse } from '../common/types/response.type';
 import { WorkspaceMember, WorkspaceRoutesShortTemplate, WorkspaceWithDetails } from '../common/types/workspace.type';
 import { SafeWorkspace } from '../common/types/workspaces.type';
 import { redirect } from '../common/utils/redirect.util';
+import { WorkspaceRouteAuthorizationRepository } from './../common/db/repositories/workspace-route-authorization.repository';
+import { WorkspaceRouteRepository } from './../common/db/repositories/workspace-route.repository';
 import { WorkspaceRoutesTemplateRepository } from './../common/db/repositories/workspace-routes-template.repository';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { ExcludeUserFromWorkspaceDto } from './dto/exclude-user-from-workspace.dto';
@@ -189,7 +188,9 @@ export class WorkspacesService {
 
     const registeredUsers = await this.userRepository.find({
       where: {
-        email: In(inviteUsersDto.emails)
+        email: {
+          $in: inviteUsersDto.emails
+        } as any
       }
     });
 
